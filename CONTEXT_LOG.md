@@ -38,7 +38,7 @@ Multiplayer edge control battle game with:
 - **Validation record:** `_bef52731214f7...` → AWS validation (in Namecheap)
 
 #### Route 53 DNS (api.batorbattle.space hosted zone)
-- **Nameservers:** 
+- **Nameservers:**
   - ns-318.awsdns-39.com
   - ns-1843.awsdns-38.co.uk
   - ns-1349.awsdns-40.org
@@ -48,11 +48,10 @@ Multiplayer edge control battle game with:
 - **Validation Record 2:** `_2ad376a66dadb538885e99a47cbeb2fc.2a57j77qq20y5ehfkbn2udbglnlliy1.api` → AWS validation ✅
 
 ### SSL Certificate Status
-- **Status:** ⏳ PENDING
+- **Status:** ✅ ACTIVE
 - **Domain:** `api.batorbattle.space`
-- **Issue:** AWS App Runner is validating DNS records
-- **Expected:** 15-30 minutes after DNS propagation
-- **Action:** Wait for AWS to issue certificate automatically
+- **Issued:** December 25, 2025
+- **Verified:** HTTPS working correctly
 
 ## Configuration Details
 
@@ -78,12 +77,9 @@ API_URL=https://api.batorbattle.space
 
 ## Current Issues
 
-### 1. SSL Certificate Pending ⏳
-- **Issue:** AWS App Runner custom domain shows "Pending certificate DNS validation"
-- **Cause:** Waiting for AWS to validate DNS records and issue certificate
-- **Status:** DNS records are correct, validation should complete automatically
-- **ETA:** 15-30 minutes from DNS propagation
-- **Action:** Monitor AWS App Runner console for status change to "Active"
+### 1. SSL Certificate ✅ RESOLVED
+- **Status:** Certificate issued and active
+- **Domain:** `api.batorbattle.space` is now accessible via HTTPS
 
 ### 2. Frontend Not Deployed ⏳
 - **Issue:** Frontend not yet deployed to Netlify
@@ -104,11 +100,11 @@ API_URL=https://api.batorbattle.space
 
 ## What's Pending ⏳
 
-1. **SSL Certificate:** Waiting for AWS to issue certificate for `api.batorbattle.space`
-2. **Frontend Deployment:** Need to deploy to Netlify
-3. **Environment Variables:** Set `API_URL` in Netlify
-4. **CORS Verification:** Confirm CORS works after SSL is active
-5. **End-to-End Testing:** Test full flow once SSL is active
+1. ✅ **SSL Certificate:** COMPLETE - Certificate active for `api.batorbattle.space`
+2. ⏳ **Frontend Deployment:** Need to deploy to Netlify
+3. ⏳ **Environment Variables:** Set `API_URL=https://api.batorbattle.space` in Netlify
+4. ⏳ **CORS Verification:** Confirm CORS works (should be configured correctly)
+5. ⏳ **End-to-End Testing:** Test full flow once frontend is deployed
 
 ## File Structure
 
@@ -150,9 +146,9 @@ batorbattle/
 
 ## Next Actions (In Order)
 
-1. ⏳ **Wait for SSL Certificate** (15-30 minutes)
-   - Monitor AWS App Runner console
-   - Status should change to "Active"
+1. ✅ **SSL Certificate** - COMPLETE
+   - Certificate is active
+   - `https://api.batorbattle.space` is working
 
 2. ⏳ **Deploy Frontend to Netlify**
    - Connect GitHub repository
@@ -205,5 +201,6 @@ batorbattle/
 
 **Last Verified:** Backend responding correctly at App Runner URL
 **DNS Status:** All records correct and resolving
-**SSL Status:** Pending AWS validation
+**SSL Status:** ✅ ACTIVE - Certificate issued and working
+**HTTPS:** `https://api.batorbattle.space` is fully functional
 
