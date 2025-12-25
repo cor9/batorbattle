@@ -1,6 +1,7 @@
 # Custom Domain Setup: batorbattle.space
 
 This guide covers setting up custom domains for:
+
 - **Frontend (Netlify)**: `batorbattle.space` - Main website
 - **Backend (AWS App Runner)**: `api.batorbattle.space` - API server
 
@@ -46,16 +47,19 @@ In Netlify dashboard:
 ## Backend (AWS App Runner) - api.batorbattle.space
 
 **Domain Structure:**
+
 - Frontend: `https://batorbattle.space` (Netlify)
 - Backend: `https://api.batorbattle.space` (AWS App Runner)
 
 ### Step 1: Add Custom Domain in AWS App Runner
 
 1. **Go to AWS App Runner Console**
+
    - Navigate to: https://console.aws.amazon.com/apprunner
    - Select your service (e.g., `bator-battle-backend`)
 
 2. **Add Custom Domain**
+
    - Click on your service name
    - Go to the **Custom domains** tab
    - Click **Add domain**
@@ -72,6 +76,7 @@ In Netlify dashboard:
 At your domain registrar (where you bought `batorbattle.space`), add:
 
 **CNAME Record:**
+
 - **Name/Host**: `api`
 - **Value/Target**: `xxxxx.us-east-1.awsapprunner.com` (the value AWS provided)
 - **TTL**: 3600 (or default)
@@ -111,6 +116,7 @@ In Netlify dashboard:
 ### Alternative: Use App Runner Default URL
 
 If you prefer to keep the App Runner default URL:
+
 - No DNS configuration needed
 - Just ensure `CORS_ORIGIN` includes `https://batorbattle.space`
 - Update Netlify `API_URL` to your App Runner service URL
@@ -201,12 +207,14 @@ CNAME   api     [xxxxx.us-east-1.awsapprunner.com]
 ## Final Configuration Checklist
 
 ### Frontend (Netlify)
+
 - [ ] Domain `batorbattle.space` added to Netlify
 - [ ] DNS records configured (A record or nameservers)
 - [ ] SSL certificate issued (green lock in browser)
 - [ ] Test `https://batorbattle.space` loads correctly
 
 ### Backend (AWS App Runner)
+
 - [ ] Custom domain `api.batorbattle.space` added in App Runner
 - [ ] CNAME record added at domain registrar
 - [ ] DNS propagated (check with `dig api.batorbattle.space` or `nslookup api.batorbattle.space`)
@@ -215,6 +223,7 @@ CNAME   api     [xxxxx.us-east-1.awsapprunner.com]
 - [ ] Backend redeployed with new CORS settings
 
 ### Integration
+
 - [ ] `API_URL` in Netlify updated to `https://api.batorbattle.space`
 - [ ] Frontend redeployed with new API URL
 - [ ] Test site at `https://batorbattle.space`
@@ -235,6 +244,7 @@ CNAME   api     [xxxxx.us-east-1.awsapprunner.com]
 ## Testing DNS Configuration
 
 ### Check Frontend DNS:
+
 ```bash
 dig batorbattle.space
 # or
@@ -242,6 +252,7 @@ nslookup batorbattle.space
 ```
 
 ### Check Backend DNS:
+
 ```bash
 dig api.batorbattle.space
 # or

@@ -1,9 +1,10 @@
 // Configuration - loaded from config.js
-const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || 'http://localhost:8181';
+const API_URL =
+  (window.APP_CONFIG && window.APP_CONFIG.API_URL) || "http://localhost:8181";
 
 // Game State
 const gameState = {
-  currentScreen: 'age-gate',
+  currentScreen: "age-gate",
   isPlaying: false,
   isPaused: false,
   edgeLevel: 0,
@@ -11,7 +12,7 @@ const gameState = {
   timer: null,
   sessionTimer: null,
   sessionEndTime: null,
-  gameMode: 'solo', // 'solo' or 'multiplayer'
+  gameMode: "solo", // 'solo' or 'multiplayer'
   roomName: null,
   username: null,
   role: null, // 'player' or 'spectator'
@@ -58,28 +59,28 @@ const gameState = {
 // Instructions pool
 const instructions = {
   stroke: [
-    'Stroke Fast!',
-    'Stroke Slow',
-    'Normal Pace',
-    'Lube Up and Stroke',
-    'Steady Rhythm',
-    'Build the Edge',
-    'Keep Going',
+    "Stroke Fast!",
+    "Stroke Slow",
+    "Normal Pace",
+    "Lube Up and Stroke",
+    "Steady Rhythm",
+    "Build the Edge",
+    "Keep Going",
     "Don't Stop",
-    'Faster Now',
-    'Slow and Steady',
+    "Faster Now",
+    "Slow and Steady",
   ],
   stop: [
-    'Hands Off!',
-    'Stop Touching',
-    'No Stroking',
-    'Hold the Edge',
-    'Stay Still',
+    "Hands Off!",
+    "Stop Touching",
+    "No Stroking",
+    "Hold the Edge",
+    "Stay Still",
     "Don't Move",
-    'Control Yourself',
-    'Wait...',
-    'Tease Yourself',
-    'Just Watch',
+    "Control Yourself",
+    "Wait...",
+    "Tease Yourself",
+    "Just Watch",
   ],
 };
 
@@ -91,82 +92,82 @@ let localVideoTrack = null;
 // DOM Elements
 const elements = {
   // Screens
-  ageGate: document.getElementById('age-gate'),
-  lobbyScreen: document.getElementById('lobby-screen'),
-  roomWaitingScreen: document.getElementById('room-waiting-screen'),
-  optionsScreen: document.getElementById('options-screen'),
-  gameScreen: document.getElementById('game-screen'),
+  ageGate: document.getElementById("age-gate"),
+  lobbyScreen: document.getElementById("lobby-screen"),
+  roomWaitingScreen: document.getElementById("room-waiting-screen"),
+  optionsScreen: document.getElementById("options-screen"),
+  gameScreen: document.getElementById("game-screen"),
 
   // Age Gate
-  enterBtn: document.getElementById('enter-btn'),
-  exitBtn: document.getElementById('exit-btn'),
+  enterBtn: document.getElementById("enter-btn"),
+  exitBtn: document.getElementById("exit-btn"),
 
   // Lobby
-  username: document.getElementById('username'),
-  createRoomBtn: document.getElementById('create-room-btn'),
-  roomCode: document.getElementById('room-code'),
-  joinUsername: document.getElementById('join-username'),
-  joinRoomBtn: document.getElementById('join-room-btn'),
-  soloPlayBtn: document.getElementById('solo-play-btn'),
-  lobbyBackBtn: document.getElementById('lobby-back-btn'),
+  username: document.getElementById("username"),
+  createRoomBtn: document.getElementById("create-room-btn"),
+  roomCode: document.getElementById("room-code"),
+  joinUsername: document.getElementById("join-username"),
+  joinRoomBtn: document.getElementById("join-room-btn"),
+  soloPlayBtn: document.getElementById("solo-play-btn"),
+  lobbyBackBtn: document.getElementById("lobby-back-btn"),
 
   // Room Waiting
-  roomNameDisplay: document.getElementById('room-name-display'),
-  roomCodeDisplay: document.getElementById('room-code-display'),
-  playerCount: document.getElementById('player-count'),
-  spectatorCount: document.getElementById('spectator-count'),
-  playersList: document.getElementById('players-list'),
-  spectatorsList: document.getElementById('spectators-list'),
-  startBattleBtn: document.getElementById('start-battle-btn'),
-  leaveRoomBtn: document.getElementById('leave-room-btn'),
-  roomSessionLength: document.getElementById('room-session-length'),
-  roomSessionLengthValue: document.getElementById('room-session-length-value'),
-  roomDifficulty: document.getElementById('room-difficulty'),
-  roomDifficultyValue: document.getElementById('room-difficulty-value'),
-  roomOrgasmChance: document.getElementById('room-orgasm-chance'),
-  roomOrgasmChanceValue: document.getElementById('room-orgasm-chance-value'),
-  webcamRequired: document.getElementById('webcam-required'),
-  spectatorsAllowed: document.getElementById('spectators-allowed'),
+  roomNameDisplay: document.getElementById("room-name-display"),
+  roomCodeDisplay: document.getElementById("room-code-display"),
+  playerCount: document.getElementById("player-count"),
+  spectatorCount: document.getElementById("spectator-count"),
+  playersList: document.getElementById("players-list"),
+  spectatorsList: document.getElementById("spectators-list"),
+  startBattleBtn: document.getElementById("start-battle-btn"),
+  leaveRoomBtn: document.getElementById("leave-room-btn"),
+  roomSessionLength: document.getElementById("room-session-length"),
+  roomSessionLengthValue: document.getElementById("room-session-length-value"),
+  roomDifficulty: document.getElementById("room-difficulty"),
+  roomDifficultyValue: document.getElementById("room-difficulty-value"),
+  roomOrgasmChance: document.getElementById("room-orgasm-chance"),
+  roomOrgasmChanceValue: document.getElementById("room-orgasm-chance-value"),
+  webcamRequired: document.getElementById("webcam-required"),
+  spectatorsAllowed: document.getElementById("spectators-allowed"),
 
   // Options (Solo)
-  backToAgeGate: document.getElementById('back-to-age-gate'),
-  startGameBtn: document.getElementById('start-game-btn'),
-  sessionLength: document.getElementById('session-length'),
-  sessionLengthValue: document.getElementById('session-length-value'),
-  difficulty: document.getElementById('difficulty'),
-  difficultyValue: document.getElementById('difficulty-value'),
-  orgasmChance: document.getElementById('orgasm-chance'),
-  orgasmChanceValue: document.getElementById('orgasm-chance-value'),
-  soundEnabled: document.getElementById('sound-enabled'),
+  backToAgeGate: document.getElementById("back-to-age-gate"),
+  startGameBtn: document.getElementById("start-game-btn"),
+  sessionLength: document.getElementById("session-length"),
+  sessionLengthValue: document.getElementById("session-length-value"),
+  difficulty: document.getElementById("difficulty"),
+  difficultyValue: document.getElementById("difficulty-value"),
+  orgasmChance: document.getElementById("orgasm-chance"),
+  orgasmChanceValue: document.getElementById("orgasm-chance-value"),
+  soundEnabled: document.getElementById("sound-enabled"),
 
   // Game
-  instruction: document.getElementById('instruction'),
-  edgeBar: document.getElementById('edge-bar'),
-  edgePercentage: document.getElementById('edge-percentage'),
-  timerDisplay: document.getElementById('timer-display'),
-  pauseBtn: document.getElementById('pause-btn'),
-  failedBtn: document.getElementById('failed-btn'),
-  endGameBtn: document.getElementById('end-game-btn'),
-  videoGrid: document.getElementById('video-grid'),
-  rankingsContainer: document.getElementById('rankings-container'),
-  rankingsList: document.getElementById('rankings-list'),
+  instruction: document.getElementById("instruction"),
+  edgeBar: document.getElementById("edge-bar"),
+  edgePercentage: document.getElementById("edge-percentage"),
+  timerDisplay: document.getElementById("timer-display"),
+  pauseBtn: document.getElementById("pause-btn"),
+  failedBtn: document.getElementById("failed-btn"),
+  endGameBtn: document.getElementById("end-game-btn"),
+  videoGrid: document.getElementById("video-grid"),
+  rankingsContainer: document.getElementById("rankings-container"),
+  rankingsList: document.getElementById("rankings-list"),
 
   // End Game
-  endOverlay: document.getElementById('end-overlay'),
-  endTitle: document.getElementById('end-title'),
-  endMessage: document.getElementById('end-message'),
-  restartBtn: document.getElementById('restart-btn'),
-  optionsBtn: document.getElementById('options-btn'),
+  endOverlay: document.getElementById("end-overlay"),
+  endTitle: document.getElementById("end-title"),
+  endMessage: document.getElementById("end-message"),
+  restartBtn: document.getElementById("restart-btn"),
+  optionsBtn: document.getElementById("options-btn"),
 
   // Chat
-  chatSidebar: document.getElementById('chat-sidebar'),
-  chatHeader: document.getElementById('chat-header'),
-  userCount: document.getElementById('user-count'),
-  toggleChat: document.getElementById('toggle-chat'),
-  chatMessages: document.getElementById('chat-messages'),
-  chatInput: document.getElementById('chat-input'),
-  sendBtn: document.getElementById('send-btn'),
-  quickReactions: document.getElementById('quick-reactions'),
+  chatSidebar: document.getElementById("chat-sidebar"),
+  chatHeader: document.getElementById("chat-header"),
+  userCount: document.getElementById("user-count"),
+  toggleChat: document.getElementById("toggle-chat"),
+  chatMessages: document.getElementById("chat-messages"),
+  chatInput: document.getElementById("chat-input"),
+  sendBtn: document.getElementById("send-btn"),
+  quickReactions: document.getElementById("quick-reactions"),
 };
 
 // Initialize
@@ -178,116 +179,116 @@ function init() {
 // Event Listeners
 function setupEventListeners() {
   // Age gate
-  elements.enterBtn.addEventListener('click', () => {
-    showScreen('lobby-screen');
+  elements.enterBtn.addEventListener("click", () => {
+    showScreen("lobby-screen");
   });
 
-  elements.exitBtn.addEventListener('click', () => {
-    window.location.href = 'about:blank';
+  elements.exitBtn.addEventListener("click", () => {
+    window.location.href = "about:blank";
   });
 
   // Lobby
-  elements.createRoomBtn.addEventListener('click', createRoom);
-  elements.joinRoomBtn.addEventListener('click', joinRoom);
-  elements.soloPlayBtn.addEventListener('click', () => {
-    gameState.gameMode = 'solo';
-    showScreen('options-screen');
+  elements.createRoomBtn.addEventListener("click", createRoom);
+  elements.joinRoomBtn.addEventListener("click", joinRoom);
+  elements.soloPlayBtn.addEventListener("click", () => {
+    gameState.gameMode = "solo";
+    showScreen("options-screen");
   });
-  elements.lobbyBackBtn.addEventListener('click', () => {
-    showScreen('age-gate');
+  elements.lobbyBackBtn.addEventListener("click", () => {
+    showScreen("age-gate");
   });
 
   // Room waiting
-  elements.startBattleBtn.addEventListener('click', startBattle);
-  elements.leaveRoomBtn.addEventListener('click', leaveRoom);
-  elements.roomSessionLength.addEventListener('input', (e) => {
+  elements.startBattleBtn.addEventListener("click", startBattle);
+  elements.leaveRoomBtn.addEventListener("click", leaveRoom);
+  elements.roomSessionLength.addEventListener("input", (e) => {
     const value = parseInt(e.target.value);
     elements.roomSessionLengthValue.textContent = value;
     if (gameState.isHost && socket) {
       gameState.room.settings.sessionLength = value;
-      socket.emit('gameStateUpdate', { settings: gameState.room.settings });
+      socket.emit("gameStateUpdate", { settings: gameState.room.settings });
     }
   });
-  elements.roomDifficulty.addEventListener('input', (e) => {
+  elements.roomDifficulty.addEventListener("input", (e) => {
     const diff = parseInt(e.target.value);
-    const labels = ['Easy', 'Medium', 'Hard'];
+    const labels = ["Easy", "Medium", "Hard"];
     elements.roomDifficultyValue.textContent = labels[diff - 1];
     if (gameState.isHost && socket) {
       gameState.room.settings.difficulty = diff;
-      socket.emit('gameStateUpdate', { settings: gameState.room.settings });
+      socket.emit("gameStateUpdate", { settings: gameState.room.settings });
     }
   });
-  elements.roomOrgasmChance.addEventListener('input', (e) => {
+  elements.roomOrgasmChance.addEventListener("input", (e) => {
     const value = parseInt(e.target.value);
     elements.roomOrgasmChanceValue.textContent = value;
     if (gameState.isHost && socket) {
       gameState.room.settings.orgasmChance = value;
-      socket.emit('gameStateUpdate', { settings: gameState.room.settings });
+      socket.emit("gameStateUpdate", { settings: gameState.room.settings });
     }
   });
 
   // Options (Solo)
-  elements.backToAgeGate.addEventListener('click', () => {
-    showScreen('age-gate');
+  elements.backToAgeGate.addEventListener("click", () => {
+    showScreen("age-gate");
   });
-  elements.startGameBtn.addEventListener('click', () => {
+  elements.startGameBtn.addEventListener("click", () => {
     startGame();
   });
-  elements.sessionLength.addEventListener('input', (e) => {
+  elements.sessionLength.addEventListener("input", (e) => {
     gameState.settings.sessionLength = parseInt(e.target.value);
     elements.sessionLengthValue.textContent = e.target.value;
   });
-  elements.difficulty.addEventListener('input', (e) => {
+  elements.difficulty.addEventListener("input", (e) => {
     const diff = parseInt(e.target.value);
     gameState.settings.difficulty = diff;
-    const labels = ['Easy', 'Medium', 'Hard'];
+    const labels = ["Easy", "Medium", "Hard"];
     elements.difficultyValue.textContent = labels[diff - 1];
   });
-  elements.orgasmChance.addEventListener('input', (e) => {
+  elements.orgasmChance.addEventListener("input", (e) => {
     gameState.settings.orgasmChance = parseInt(e.target.value);
     elements.orgasmChanceValue.textContent = e.target.value;
   });
-  elements.soundEnabled.addEventListener('change', (e) => {
+  elements.soundEnabled.addEventListener("change", (e) => {
     gameState.settings.soundEnabled = e.target.checked;
   });
 
   // Game controls
-  elements.pauseBtn.addEventListener('click', togglePause);
-  elements.failedBtn.addEventListener('click', handleEarlyOrgasm);
-  elements.endGameBtn.addEventListener('click', () => {
-    endGame(false, 'Game ended by user');
+  elements.pauseBtn.addEventListener("click", togglePause);
+  elements.failedBtn.addEventListener("click", handleEarlyOrgasm);
+  elements.endGameBtn.addEventListener("click", () => {
+    endGame(false, "Game ended by user");
   });
 
   // End game overlay
-  elements.restartBtn.addEventListener('click', () => {
+  elements.restartBtn.addEventListener("click", () => {
     resetGame();
-    if (gameState.gameMode === 'multiplayer' && socket) {
+    if (gameState.gameMode === "multiplayer" && socket) {
       startBattle();
     } else {
       startGame();
     }
   });
-  elements.optionsBtn.addEventListener('click', () => {
+  elements.optionsBtn.addEventListener("click", () => {
     resetGame();
-    if (gameState.gameMode === 'multiplayer') {
-      showScreen('room-waiting-screen');
+    if (gameState.gameMode === "multiplayer") {
+      showScreen("room-waiting-screen");
     } else {
-      showScreen('options-screen');
+      showScreen("options-screen");
     }
   });
 
   // Chat
-  elements.sendBtn.addEventListener('click', sendChatMessage);
-  elements.chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+  elements.sendBtn.addEventListener("click", sendChatMessage);
+  elements.chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
       sendChatMessage();
     }
   });
-  elements.toggleChat.addEventListener('click', () => {
-    elements.chatSidebar.classList.toggle('open');
+  elements.toggleChat.addEventListener("click", () => {
+    elements.chatSidebar.classList.toggle("open");
   });
-  elements.quickReactions.addEventListener('click', (e) => {
-    if (e.target.tagName === 'SPAN') {
+  elements.quickReactions.addEventListener("click", (e) => {
+    if (e.target.tagName === "SPAN") {
       sendChatMessage(e.target.textContent);
     }
   });
@@ -295,13 +296,13 @@ function setupEventListeners() {
 
 // Screen Management
 function showScreen(screenId) {
-  elements.ageGate.classList.remove('active');
-  elements.lobbyScreen.classList.remove('active');
-  elements.roomWaitingScreen.classList.remove('active');
-  elements.optionsScreen.classList.remove('active');
-  elements.gameScreen.classList.remove('active');
+  elements.ageGate.classList.remove("active");
+  elements.lobbyScreen.classList.remove("active");
+  elements.roomWaitingScreen.classList.remove("active");
+  elements.optionsScreen.classList.remove("active");
+  elements.gameScreen.classList.remove("active");
 
-  document.getElementById(screenId).classList.add('active');
+  document.getElementById(screenId).classList.add("active");
   gameState.currentScreen = screenId;
 }
 
@@ -309,32 +310,33 @@ function showScreen(screenId) {
 function updateSettingsDisplay() {
   elements.sessionLengthValue.textContent = gameState.settings.sessionLength;
   elements.orgasmChanceValue.textContent = gameState.settings.orgasmChance;
-  const labels = ['Easy', 'Medium', 'Hard'];
-  elements.difficultyValue.textContent = labels[gameState.settings.difficulty - 1];
+  const labels = ["Easy", "Medium", "Hard"];
+  elements.difficultyValue.textContent =
+    labels[gameState.settings.difficulty - 1];
 }
 
 // Room Management
 function generateRoomCode() {
-  return 'BATTLE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  return "BATTLE-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
 async function createRoom() {
   const username = elements.username.value.trim();
   if (!username) {
-    alert('Please enter a username');
+    alert("Please enter a username");
     return;
   }
 
   gameState.username = username;
   gameState.roomName = generateRoomCode();
-  gameState.role = 'player';
+  gameState.role = "player";
   gameState.isHost = true;
-  gameState.gameMode = 'multiplayer';
+  gameState.gameMode = "multiplayer";
 
   await connectSocket();
-  await joinLiveKitRoom('player');
+  await joinLiveKitRoom("player");
 
-  showScreen('room-waiting-screen');
+  showScreen("room-waiting-screen");
   updateRoomDisplay();
 }
 
@@ -343,20 +345,20 @@ async function joinRoom() {
   const username = elements.joinUsername.value.trim();
 
   if (!roomCode || !username) {
-    alert('Please enter both room code and username');
+    alert("Please enter both room code and username");
     return;
   }
 
   gameState.username = username;
   gameState.roomName = roomCode;
-  gameState.role = 'player';
+  gameState.role = "player";
   gameState.isHost = false;
-  gameState.gameMode = 'multiplayer';
+  gameState.gameMode = "multiplayer";
 
   await connectSocket();
-  await joinLiveKitRoom('player');
+  await joinLiveKitRoom("player");
 
-  showScreen('room-waiting-screen');
+  showScreen("room-waiting-screen");
   updateRoomDisplay();
 }
 
@@ -372,7 +374,7 @@ function leaveRoom() {
   clearVideoGrid();
   gameState.roomName = null;
   gameState.username = null;
-  showScreen('lobby-screen');
+  showScreen("lobby-screen");
 }
 
 // Socket.io Connection
@@ -381,9 +383,9 @@ async function connectSocket() {
 
   socket = io(API_URL);
 
-  socket.on('connect', () => {
-    console.log('Connected to server');
-    socket.emit('joinRoom', {
+  socket.on("connect", () => {
+    console.log("Connected to server");
+    socket.emit("joinRoom", {
       roomName: gameState.roomName,
       username: gameState.username,
       role: gameState.role,
@@ -391,7 +393,7 @@ async function connectSocket() {
     });
   });
 
-  socket.on('roomUpdate', (data) => {
+  socket.on("roomUpdate", (data) => {
     gameState.room.players = data.players;
     gameState.room.spectators = data.spectators;
     if (data.settings) {
@@ -400,47 +402,108 @@ async function connectSocket() {
     updateRoomDisplay();
   });
 
-  socket.on('systemMessage', (data) => {
-    addChatMessage(data.message, 'system');
+  socket.on("systemMessage", (data) => {
+    addChatMessage(data.message, "system");
   });
 
-  socket.on('chatMessage', (data) => {
-    addChatMessage(`${data.username}: ${data.message}`, data.isKing ? 'king' : 'normal', data.username);
+  socket.on("chatMessage", (data) => {
+    addChatMessage(
+      `${data.username}: ${data.message}`,
+      data.isKing ? "king" : "normal",
+      data.username
+    );
   });
 
-  socket.on('gameStart', (state) => {
+  socket.on("gameStart", (state) => {
     gameState.isPlaying = true;
-    showScreen('game-screen');
+    showScreen("game-screen");
     startGame();
   });
 
-  socket.on('gameState', (state) => {
+  socket.on("gameState", (state) => {
     if (state.isStroking !== undefined) {
       gameState.isStroking = state.isStroking;
       updateGameState(state);
     }
   });
 
-  socket.on('playerUpdate', (data) => {
+  socket.on("playerUpdate", (data) => {
     updatePlayerRanking(data);
   });
 
-  socket.on('gameEnd', (data) => {
+  socket.on("gameEnd", (data) => {
     endGame(true, data.message, data.rankings);
   });
+}
+
+// Request camera and microphone permissions
+async function requestMediaPermissions() {
+  try {
+    // Check if getUserMedia is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error(
+        "Your browser does not support camera and microphone access."
+      );
+    }
+
+    // Request permissions explicitly
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    // Stop the stream immediately - we just needed to get permission
+    stream.getTracks().forEach((track) => track.stop());
+
+    return true;
+  } catch (error) {
+    console.error("Permission request failed:", error);
+
+    if (
+      error.name === "NotAllowedError" ||
+      error.name === "PermissionDeniedError"
+    ) {
+      throw new Error(
+        "Camera and microphone permissions were denied. Please allow access in your browser settings and try again."
+      );
+    } else if (
+      error.name === "NotFoundError" ||
+      error.name === "DevicesNotFoundError"
+    ) {
+      throw new Error(
+        "No camera or microphone found. Please connect a device and try again."
+      );
+    } else if (
+      error.name === "NotReadableError" ||
+      error.name === "TrackStartError"
+    ) {
+      throw new Error(
+        "Camera or microphone is already in use by another application. Please close other applications and try again."
+      );
+    } else {
+      throw new Error(
+        `Failed to access camera and microphone: ${error.message}`
+      );
+    }
+  }
 }
 
 // LiveKit Integration
 async function joinLiveKitRoom(role) {
   try {
+    // Request camera and microphone permissions first (for players)
+    if (role === "player") {
+      await requestMediaPermissions();
+    }
+
     // Get token from server
     const response = await fetch(`${API_URL}/api/getToken`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         roomName: gameState.roomName,
         participantName: gameState.username,
-        canPublish: role === 'player',
+        canPublish: role === "player",
       }),
     });
 
@@ -453,15 +516,15 @@ async function joinLiveKitRoom(role) {
     await room.connect(url, token);
 
     // Enable camera and microphone for players
-    if (role === 'player') {
+    if (role === "player") {
       localVideoTrack = await room.localParticipant.enableCameraAndMicrophone();
       addLocalVideo(localVideoTrack);
     }
 
     // Handle remote participants
-    room.on('participantConnected', (participant) => {
-      participant.on('trackSubscribed', (track, publication, participant) => {
-        if (track.kind === 'video') {
+    room.on("participantConnected", (participant) => {
+      participant.on("trackSubscribed", (track, publication, participant) => {
+        if (track.kind === "video") {
           addRemoteVideo(track, participant);
         }
       });
@@ -470,30 +533,40 @@ async function joinLiveKitRoom(role) {
     // Handle existing participants
     room.remoteParticipants.forEach((participant) => {
       participant.trackPublications.forEach((publication) => {
-        if (publication.kind === 'video' && publication.isSubscribed) {
+        if (publication.kind === "video" && publication.isSubscribed) {
           addRemoteVideo(publication.track, participant);
         }
       });
     });
   } catch (error) {
-    console.error('Failed to join LiveKit room:', error);
-    alert('Failed to connect to video room. Please check your camera permissions.');
+    console.error("Failed to join LiveKit room:", error);
+
+    // Show user-friendly error message
+    const errorMessage =
+      error.message ||
+      "Failed to connect to video room. Please check your camera permissions.";
+    alert(errorMessage);
+
+    // Return to lobby if connection fails
+    if (gameState.gameMode === "multiplayer") {
+      leaveRoom();
+    }
   }
 }
 
 function addLocalVideo(track) {
-  const video = document.createElement('video');
+  const video = document.createElement("video");
   video.srcObject = new MediaStream([track.mediaStreamTrack]);
   video.autoplay = true;
   video.muted = true;
-  video.classList.add('local');
+  video.classList.add("local");
 
-  const container = document.createElement('div');
-  container.className = 'video-item local';
+  const container = document.createElement("div");
+  container.className = "video-item local";
   container.appendChild(video);
 
-  const label = document.createElement('div');
-  label.className = 'video-label';
+  const label = document.createElement("div");
+  label.className = "video-label";
   label.textContent = `${gameState.username} (You)`;
   container.appendChild(label);
 
@@ -501,25 +574,25 @@ function addLocalVideo(track) {
 }
 
 function addRemoteVideo(track, participant) {
-  const video = document.createElement('video');
+  const video = document.createElement("video");
   video.srcObject = new MediaStream([track.mediaStreamTrack]);
   video.autoplay = true;
 
-  const container = document.createElement('div');
-  container.className = 'video-item';
+  const container = document.createElement("div");
+  container.className = "video-item";
   container.dataset.participantId = participant.identity;
   container.appendChild(video);
 
-  const label = document.createElement('div');
-  label.className = 'video-label';
-  label.textContent = participant.identity || 'Player';
+  const label = document.createElement("div");
+  label.className = "video-label";
+  label.textContent = participant.identity || "Player";
   container.appendChild(label);
 
   elements.videoGrid.appendChild(container);
 }
 
 function clearVideoGrid() {
-  elements.videoGrid.innerHTML = '';
+  elements.videoGrid.innerHTML = "";
 }
 
 function updateRoomDisplay() {
@@ -535,20 +608,20 @@ function updateRoomDisplay() {
   elements.spectatorCount.textContent = spectatorCount;
 
   // Update players list
-  elements.playersList.innerHTML = '';
+  elements.playersList.innerHTML = "";
   gameState.room.players.forEach((player) => {
-    const item = document.createElement('div');
-    item.className = 'player-item';
-    if (player.failed) item.classList.add('failed');
+    const item = document.createElement("div");
+    item.className = "player-item";
+    if (player.failed) item.classList.add("failed");
     item.textContent = player.username;
     elements.playersList.appendChild(item);
   });
 
   // Update spectators list
-  elements.spectatorsList.innerHTML = '';
+  elements.spectatorsList.innerHTML = "";
   gameState.room.spectators.forEach((spectator) => {
-    const item = document.createElement('div');
-    item.className = 'spectator-item';
+    const item = document.createElement("div");
+    item.className = "spectator-item";
     item.textContent = spectator.username;
     elements.spectatorsList.appendChild(item);
   });
@@ -560,22 +633,25 @@ function updateRoomDisplay() {
   if (gameState.isHost) {
     elements.startBattleBtn.disabled = playerCount < 2;
   } else {
-    elements.startBattleBtn.style.display = 'none';
+    elements.startBattleBtn.style.display = "none";
   }
 
   // Update settings display
   if (gameState.room.settings.sessionLength) {
     elements.roomSessionLength.value = gameState.room.settings.sessionLength;
-    elements.roomSessionLengthValue.textContent = gameState.room.settings.sessionLength;
+    elements.roomSessionLengthValue.textContent =
+      gameState.room.settings.sessionLength;
   }
   if (gameState.room.settings.difficulty) {
     elements.roomDifficulty.value = gameState.room.settings.difficulty;
-    const labels = ['Easy', 'Medium', 'Hard'];
-    elements.roomDifficultyValue.textContent = labels[gameState.room.settings.difficulty - 1];
+    const labels = ["Easy", "Medium", "Hard"];
+    elements.roomDifficultyValue.textContent =
+      labels[gameState.room.settings.difficulty - 1];
   }
   if (gameState.room.settings.orgasmChance !== undefined) {
     elements.roomOrgasmChance.value = gameState.room.settings.orgasmChance;
-    elements.roomOrgasmChanceValue.textContent = gameState.room.settings.orgasmChance;
+    elements.roomOrgasmChanceValue.textContent =
+      gameState.room.settings.orgasmChance;
   }
 }
 
@@ -589,7 +665,7 @@ function startBattle() {
   };
 
   gameState.room.settings = settings;
-  socket.emit('startGame');
+  socket.emit("startGame");
 }
 
 // Chat Functions
@@ -599,26 +675,26 @@ function sendChatMessage(message = null) {
   const msg = message || elements.chatInput.value.trim();
   if (!msg) return;
 
-  socket.emit('chatMessage', { message: msg });
+  socket.emit("chatMessage", { message: msg });
   if (!message) {
-    elements.chatInput.value = '';
+    elements.chatInput.value = "";
   }
 }
 
-function addChatMessage(message, type = 'normal', username = '') {
-  const div = document.createElement('div');
+function addChatMessage(message, type = "normal", username = "") {
+  const div = document.createElement("div");
   div.className = `message ${type}`;
 
-  if (type === 'system') {
+  if (type === "system") {
     div.textContent = message;
   } else {
-    const parts = message.split(':');
+    const parts = message.split(":");
     if (parts.length > 1) {
-      const userSpan = document.createElement('span');
-      userSpan.className = 'username';
-      userSpan.textContent = parts[0] + ':';
+      const userSpan = document.createElement("span");
+      userSpan.className = "username";
+      userSpan.textContent = parts[0] + ":";
       div.appendChild(userSpan);
-      div.appendChild(document.createTextNode(parts.slice(1).join(':')));
+      div.appendChild(document.createTextNode(parts.slice(1).join(":")));
     } else {
       div.textContent = message;
     }
@@ -635,21 +711,22 @@ function startGame() {
   gameState.edgeLevel = 0;
   gameState.isStroking = false;
 
-  showScreen('game-screen');
-  elements.endOverlay.classList.add('hidden');
-  elements.rankingsContainer.classList.add('hidden');
+  showScreen("game-screen");
+  elements.endOverlay.classList.add("hidden");
+  elements.rankingsContainer.classList.add("hidden");
 
   // Hide video grid in solo mode
-  if (gameState.gameMode === 'solo') {
-    elements.videoGrid.style.display = 'none';
+  if (gameState.gameMode === "solo") {
+    elements.videoGrid.style.display = "none";
   } else {
-    elements.videoGrid.style.display = 'grid';
+    elements.videoGrid.style.display = "grid";
   }
 
   // Calculate session end time
-  const sessionLength = gameState.gameMode === 'multiplayer'
-    ? gameState.room.settings.sessionLength
-    : gameState.settings.sessionLength;
+  const sessionLength =
+    gameState.gameMode === "multiplayer"
+      ? gameState.room.settings.sessionLength
+      : gameState.settings.sessionLength;
   const sessionMs = sessionLength * 60 * 1000;
   gameState.sessionEndTime = Date.now() + sessionMs;
 
@@ -657,7 +734,7 @@ function startGame() {
   startSessionTimer();
 
   // Start first state change
-  if (gameState.gameMode === 'solo') {
+  if (gameState.gameMode === "solo") {
     changeState();
   } else if (gameState.isHost) {
     changeState();
@@ -685,61 +762,71 @@ function updateSessionTimer() {
   const remaining = gameState.sessionEndTime - Date.now();
 
   if (remaining <= 0) {
-    endGame(true, 'Session complete!');
+    endGame(true, "Session complete!");
     return;
   }
 
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000);
-  elements.timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  elements.timerDisplay.textContent = `${String(minutes).padStart(
+    2,
+    "0"
+  )}:${String(seconds).padStart(2, "0")}`;
 }
 
 function changeState() {
   if (!gameState.isPlaying || gameState.isPaused) return;
 
   gameState.isStroking = !gameState.isStroking;
-  const settings = gameState.gameMode === 'multiplayer'
-    ? gameState.room.settings
-    : gameState.settings;
+  const settings =
+    gameState.gameMode === "multiplayer"
+      ? gameState.room.settings
+      : gameState.settings;
   const diff = gameState.difficultySettings[settings.difficulty];
 
   if (gameState.isStroking) {
-    elements.gameScreen.className = 'screen active stroke-state';
-    const randomInstruction = instructions.stroke[Math.floor(Math.random() * instructions.stroke.length)];
+    elements.gameScreen.className = "screen active stroke-state";
+    const randomInstruction =
+      instructions.stroke[
+        Math.floor(Math.random() * instructions.stroke.length)
+      ];
     elements.instruction.textContent = randomInstruction;
 
     const edgeGain = diff.edgeGain + (gameState.edgeLevel / 100) * 5;
     updateEdge(edgeGain);
 
-    const baseTime = diff.strokeMin + Math.random() * (diff.strokeMax - diff.strokeMin);
-    const escalationFactor = 1 - (gameState.edgeLevel / 200);
+    const baseTime =
+      diff.strokeMin + Math.random() * (diff.strokeMax - diff.strokeMin);
+    const escalationFactor = 1 - gameState.edgeLevel / 200;
     const nextTime = Math.max(3000, baseTime * escalationFactor);
 
     gameState.timer = setTimeout(changeState, nextTime);
 
     if (gameState.settings.soundEnabled) {
-      playSound('stroke');
+      playSound("stroke");
     }
   } else {
-    elements.gameScreen.className = 'screen active stop-state';
-    const randomInstruction = instructions.stop[Math.floor(Math.random() * instructions.stop.length)];
+    elements.gameScreen.className = "screen active stop-state";
+    const randomInstruction =
+      instructions.stop[Math.floor(Math.random() * instructions.stop.length)];
     elements.instruction.textContent = randomInstruction;
 
     updateEdge(-diff.edgeLoss);
 
-    const baseTime = diff.stopMin + Math.random() * (diff.stopMax - diff.stopMin);
+    const baseTime =
+      diff.stopMin + Math.random() * (diff.stopMax - diff.stopMin);
     const nextTime = Math.max(2000, baseTime);
 
     gameState.timer = setTimeout(changeState, nextTime);
 
     if (gameState.settings.soundEnabled) {
-      playSound('stop');
+      playSound("stop");
     }
   }
 
   // Broadcast state in multiplayer
-  if (gameState.gameMode === 'multiplayer' && socket && gameState.isHost) {
-    socket.emit('gameStateUpdate', {
+  if (gameState.gameMode === "multiplayer" && socket && gameState.isHost) {
+    socket.emit("gameStateUpdate", {
       isStroking: gameState.isStroking,
       instruction: elements.instruction.textContent,
     });
@@ -750,8 +837,8 @@ function updateGameState(state) {
   if (state.isStroking !== undefined) {
     gameState.isStroking = state.isStroking;
     elements.gameScreen.className = gameState.isStroking
-      ? 'screen active stroke-state'
-      : 'screen active stop-state';
+      ? "screen active stroke-state"
+      : "screen active stop-state";
   }
   if (state.instruction) {
     elements.instruction.textContent = state.instruction;
@@ -759,13 +846,16 @@ function updateGameState(state) {
 }
 
 function updateEdge(amount) {
-  gameState.edgeLevel = Math.max(0, Math.min(100, gameState.edgeLevel + amount));
-  elements.edgeBar.style.width = gameState.edgeLevel + '%';
+  gameState.edgeLevel = Math.max(
+    0,
+    Math.min(100, gameState.edgeLevel + amount)
+  );
+  elements.edgeBar.style.width = gameState.edgeLevel + "%";
   elements.edgePercentage.textContent = Math.round(gameState.edgeLevel);
 
   // Broadcast in multiplayer
-  if (gameState.gameMode === 'multiplayer' && socket) {
-    socket.emit('playerUpdate', {
+  if (gameState.gameMode === "multiplayer" && socket) {
+    socket.emit("playerUpdate", {
       edgeLevel: gameState.edgeLevel,
       failed: false,
     });
@@ -779,16 +869,17 @@ function updateEdge(amount) {
 function handleEdgeReached() {
   clearTimeout(gameState.timer);
 
-  const settings = gameState.gameMode === 'multiplayer'
-    ? gameState.room.settings
-    : gameState.settings;
+  const settings =
+    gameState.gameMode === "multiplayer"
+      ? gameState.room.settings
+      : gameState.settings;
   const roll = Math.random() * 100;
   const allowOrgasm = roll < settings.orgasmChance;
 
   if (allowOrgasm) {
-    endGame(true, 'Cum now! Release yourself!');
+    endGame(true, "Cum now! Release yourself!");
   } else {
-    endGame(false, 'Denied! No cum for you. Stay on edge.');
+    endGame(false, "Denied! No cum for you. Stay on edge.");
     setTimeout(() => {
       gameState.edgeLevel = 20;
       updateEdge(0);
@@ -804,19 +895,22 @@ function togglePause() {
 
   if (gameState.isPaused) {
     clearTimeout(gameState.timer);
-    elements.pauseBtn.textContent = 'Resume';
-    elements.instruction.textContent = 'Paused';
+    elements.pauseBtn.textContent = "Resume";
+    elements.instruction.textContent = "Paused";
   } else {
-    elements.pauseBtn.textContent = 'Pause';
+    elements.pauseBtn.textContent = "Pause";
     changeState();
   }
 }
 
 function handleEarlyOrgasm() {
-  if (gameState.gameMode === 'multiplayer' && socket) {
-    socket.emit('playerFailed');
+  if (gameState.gameMode === "multiplayer" && socket) {
+    socket.emit("playerFailed");
   }
-  endGame(false, 'Ruined orgasm! Let it dribble out slowly. No satisfaction for you.');
+  endGame(
+    false,
+    "Ruined orgasm! Let it dribble out slowly. No satisfaction for you."
+  );
 }
 
 function endGame(allowOrgasm, message, rankings = null) {
@@ -824,20 +918,20 @@ function endGame(allowOrgasm, message, rankings = null) {
   clearTimeout(gameState.timer);
   clearInterval(gameState.sessionTimer);
 
-  if (gameState.gameMode === 'multiplayer' && socket && gameState.isHost) {
-    socket.emit('endGame');
+  if (gameState.gameMode === "multiplayer" && socket && gameState.isHost) {
+    socket.emit("endGame");
   }
 
-  elements.endTitle.textContent = allowOrgasm ? 'Release!' : 'Game Over';
+  elements.endTitle.textContent = allowOrgasm ? "Release!" : "Game Over";
   elements.endMessage.textContent = message;
 
   // Show rankings if multiplayer
   if (rankings && rankings.length > 0) {
-    elements.rankingsContainer.classList.remove('hidden');
-    elements.rankingsList.innerHTML = '';
+    elements.rankingsContainer.classList.remove("hidden");
+    elements.rankingsList.innerHTML = "";
     rankings.forEach((rank) => {
-      const item = document.createElement('div');
-      item.className = `ranking-item rank-${rank.rank === 1 ? '1' : ''}`;
+      const item = document.createElement("div");
+      item.className = `ranking-item rank-${rank.rank === 1 ? "1" : ""}`;
       item.innerHTML = `
         <span class="rank">#${rank.rank}</span>
         <span class="username">${rank.username}</span>
@@ -847,7 +941,7 @@ function endGame(allowOrgasm, message, rankings = null) {
     });
   }
 
-  elements.endOverlay.classList.remove('hidden');
+  elements.endOverlay.classList.remove("hidden");
 
   if (document.fullscreenElement) {
     document.exitFullscreen().catch(() => {});
@@ -872,12 +966,12 @@ function resetGame() {
   clearTimeout(gameState.timer);
   clearInterval(gameState.sessionTimer);
 
-  elements.edgeBar.style.width = '0%';
-  elements.edgePercentage.textContent = '0';
-  elements.instruction.textContent = 'Get Ready...';
-  elements.timerDisplay.textContent = '00:00';
-  elements.gameScreen.className = 'screen active';
-  elements.pauseBtn.textContent = 'Pause';
+  elements.edgeBar.style.width = "0%";
+  elements.edgePercentage.textContent = "0";
+  elements.instruction.textContent = "Get Ready...";
+  elements.timerDisplay.textContent = "00:00";
+  elements.gameScreen.className = "screen active";
+  elements.pauseBtn.textContent = "Pause";
 }
 
 // Sound Effects
@@ -891,20 +985,23 @@ function playSound(type) {
   oscillator.connect(gainNode);
   gainNode.connect(audioContext.destination);
 
-  if (type === 'stroke') {
+  if (type === "stroke") {
     oscillator.frequency.value = 400;
-    oscillator.type = 'sine';
-  } else if (type === 'stop') {
+    oscillator.type = "sine";
+  } else if (type === "stop") {
     oscillator.frequency.value = 200;
-    oscillator.type = 'square';
+    oscillator.type = "square";
   }
 
   gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+  gainNode.gain.exponentialRampToValueAtTime(
+    0.01,
+    audioContext.currentTime + 0.1
+  );
 
   oscillator.start(audioContext.currentTime);
   oscillator.stop(audioContext.currentTime + 0.1);
 }
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener("DOMContentLoaded", init);

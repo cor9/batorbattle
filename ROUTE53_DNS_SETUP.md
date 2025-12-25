@@ -105,12 +105,12 @@ dig _bef52731214f7bb7382fbdede38fd04b.api.batorbattle.space
 
 ## Benefits of Using Route 53
 
-✅ **No character limits** - Supports any length DNS record names  
-✅ **Native AWS integration** - Works seamlessly with App Runner, ACM, etc.  
-✅ **Automatic health checks** - Can set up health checks for your services  
-✅ **Easy management** - All DNS in one place (AWS console)  
-✅ **Fast propagation** - AWS's global DNS network  
-✅ **Cost-effective** - Very affordable for small to medium traffic  
+✅ **No character limits** - Supports any length DNS record names
+✅ **Native AWS integration** - Works seamlessly with App Runner, ACM, etc.
+✅ **Automatic health checks** - Can set up health checks for your services
+✅ **Easy management** - All DNS in one place (AWS console)
+✅ **Fast propagation** - AWS's global DNS network
+✅ **Cost-effective** - Very affordable for small to medium traffic
 
 ## Important Notes
 

@@ -11,8 +11,8 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN 
-      ? process.env.CORS_ORIGIN.split(',') 
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',')
       : ['https://batorbattle.space', 'http://localhost:8181'], // Custom domain + local dev
     methods: ['GET', 'POST'],
     credentials: true,
