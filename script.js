@@ -1,5 +1,5 @@
 // Configuration - loaded from config.js
-const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || 'http://localhost:3000';
+const API_URL = (window.APP_CONFIG && window.APP_CONFIG.API_URL) || 'http://localhost:8181';
 
 // Game State
 const gameState = {
