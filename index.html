@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bator Battle - Edge Control Game</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@latest/dist/livekit-client.umd.js"></script>
+  </head>
+  <body>
+    <!-- Age Gate Screen -->
+    <div id="age-gate" class="screen active">
+      <div class="age-gate-content">
+        <h1>Bator Battle</h1>
+        <p class="warning">This content is intended for adults only (18+)</p>
+        <p>
+          By entering, you confirm that you are of legal age in your
+          jurisdiction.
+        </p>
+        <div class="button-group">
+          <button id="enter-btn" class="btn btn-primary">I am 18+</button>
+          <button id="exit-btn" class="btn btn-secondary">Exit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lobby/Room Screen -->
+    <div id="lobby-screen" class="screen">
+      <div class="lobby-content">
+        <h1>Join or Create Room</h1>
+
+        <div class="lobby-section">
+          <h2>Create Room</h2>
+          <div class="input-group">
+            <label for="username">Your Username:</label>
+            <input
+              type="text"
+              id="username"
+              placeholder="Enter username"
+              maxlength="20"
+            />
+          </div>
+          <div class="button-group">
+            <button id="create-room-btn" class="btn btn-primary">
+              Create Room
+            </button>
+          </div>
+        </div>
+
+        <div class="lobby-divider">OR</div>
+
+        <div class="lobby-section">
+          <h2>Join Room</h2>
+          <div class="input-group">
+            <label for="room-code">Room Code:</label>
+            <input
+              type="text"
+              id="room-code"
+              placeholder="Enter room code"
+              maxlength="20"
+            />
+          </div>
+          <div class="input-group">
+            <label for="join-username">Your Username:</label>
+            <input
+              type="text"
+              id="join-username"
+              placeholder="Enter username"
+              maxlength="20"
+            />
+          </div>
+          <div class="button-group">
+            <button id="join-room-btn" class="btn btn-primary">
+              Join Room
+            </button>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="solo-play-btn" class="btn btn-secondary">
+            Play Solo
+          </button>
+          <button id="lobby-back-btn" class="btn btn-secondary">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Waiting Screen -->
+    <div id="room-waiting-screen" class="screen">
+      <div class="room-waiting-content">
+        <h1>Room: <span id="room-name-display"></span></h1>
+        <p class="room-code-display">
+          Share code: <strong id="room-code-display"></strong>
+        </p>
+
+        <div class="room-settings-section">
+          <h2>Room Settings</h2>
+          <div class="setting-group">
+            <label for="room-session-length">
+              Session Length:
+              <span id="room-session-length-value">30</span> minutes
+            </label>
+            <input
+              type="range"
+              id="room-session-length"
+              min="5"
+              max="60"
+              value="30"
+              step="5"
+            />
+          </div>
+          <div class="setting-group">
+            <label for="room-difficulty">
+              Difficulty: <span id="room-difficulty-value">Medium</span>
+            </label>
+            <input
+              type="range"
+              id="room-difficulty"
+              min="1"
+              max="3"
+              value="2"
+              step="1"
+            />
+          </div>
+          <div class="setting-group">
+            <label for="room-orgasm-chance">
+              Orgasm Chance: <span id="room-orgasm-chance-value">50</span>%
+            </label>
+            <input
+              type="range"
+              id="room-orgasm-chance"
+              min="0"
+              max="100"
+              value="50"
+              step="5"
+            />
+          </div>
+          <div class="setting-group">
+            <label>
+              <input type="checkbox" id="webcam-required" />
+              Webcam Required (for players)
+            </label>
+          </div>
+          <div class="setting-group">
+            <label>
+              <input type="checkbox" id="spectators-allowed" checked />
+              Allow Spectators
+            </label>
+          </div>
+        </div>
+
+        <div class="players-section">
+          <h2>Players (<span id="player-count">0</span>/4)</h2>
+          <div id="players-list" class="players-list"></div>
+        </div>
+
+        <div class="spectators-section">
+          <h2>Spectators (<span id="spectator-count">0</span>)</h2>
+          <div id="spectators-list" class="spectators-list"></div>
+        </div>
+
+        <div class="button-group">
+          <button id="start-battle-btn" class="btn btn-primary" disabled>
+            Start Battle
+          </button>
+          <button id="leave-room-btn" class="btn btn-secondary">
+            Leave Room
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Options Screen (Solo) -->
+    <div id="options-screen" class="screen">
+      <div class="options-content">
+        <h1>Game Settings</h1>
+
+        <div class="setting-group">
+          <label for="session-length">
+            Session Length: <span id="session-length-value">30</span> minutes
+          </label>
+          <input
+            type="range"
+            id="session-length"
+            min="5"
+            max="60"
+            value="30"
+            step="5"
+          />
+        </div>
+
+        <div class="setting-group">
+          <label for="difficulty">
+            Difficulty: <span id="difficulty-value">Medium</span>
+          </label>
+          <input
+            type="range"
+            id="difficulty"
+            min="1"
+            max="3"
+            value="2"
+            step="1"
+          />
+        </div>
+
+        <div class="setting-group">
+          <label for="orgasm-chance">
+            Orgasm Chance: <span id="orgasm-chance-value">50</span>%
+          </label>
+          <input
+            type="range"
+            id="orgasm-chance"
+            min="0"
+            max="100"
+            value="50"
+            step="5"
+          />
+        </div>
+
+        <div class="setting-group">
+          <label>
+            <input type="checkbox" id="sound-enabled" checked />
+            Enable Sound Effects
+          </label>
+        </div>
+
+        <div class="button-group">
+          <button id="start-game-btn" class="btn btn-primary">
+            Start Game
+          </button>
+          <button id="back-to-age-gate" class="btn btn-secondary">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+      <div id="game-content">
+        <div id="instruction" class="instruction">Get Ready...</div>
+        <div id="timer-display" class="timer">00:00</div>
+
+        <!-- Video Grid for Multiplayer -->
+        <div id="video-grid" class="video-grid"></div>
+
+        <!-- Player Rankings (Multiplayer) -->
+        <div id="rankings-container" class="rankings-container hidden">
+          <h3>Rankings</h3>
+          <div id="rankings-list" class="rankings-list"></div>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-label">Edge Level</div>
+          <div id="edge-bar-container" class="edge-bar-container">
+            <div id="edge-bar" class="edge-bar"></div>
+          </div>
+          <div class="progress-percentage">
+            <span id="edge-percentage">0</span>%
+          </div>
+        </div>
+
+        <div class="game-controls">
+          <button id="pause-btn" class="btn btn-control">Pause</button>
+          <button id="failed-btn" class="btn btn-control">
+            I Came Too Early
+          </button>
+          <button id="end-game-btn" class="btn btn-control">End Game</button>
+        </div>
+      </div>
+
+      <!-- End Game Overlay -->
+      <div id="end-overlay" class="overlay hidden">
+        <div class="end-content">
+          <h1 id="end-title">Game Over</h1>
+          <p id="end-message"></p>
+          <div class="button-group">
+            <button id="restart-btn" class="btn btn-primary">Play Again</button>
+            <button id="options-btn" class="btn btn-secondary">
+              Change Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Sidebar -->
+    <div id="chat-sidebar" class="chat-sidebar">
+      <div id="chat-header" class="chat-header">
+        <h3>Chat <span id="user-count">0</span></h3>
+        <button id="toggle-chat" class="toggle-chat">−</button>
+      </div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div id="chat-input-area" class="chat-input-area">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Type message... (Enter to send)"
+          maxlength="200"
+        />
+        <button id="send-btn" class="btn btn-primary">Send</button>
+        <div id="quick-reactions" class="quick-reactions">
+          <span title="Laughing">😂</span>
+          <span title="Fire">🔥</span>
+          <span title="Small">🍤</span>
+          <span title="Tiny">🤏</span>
+          <span title="Dick">🍆</span>
+          <span title="Cum">💦</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
