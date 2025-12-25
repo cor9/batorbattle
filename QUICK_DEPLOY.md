@@ -36,7 +36,9 @@ NODE_ENV=production
 CORS_ORIGIN=https://batorbattle.space,https://www.batorbattle.space
 ```
 
-**Note**: After setting up custom domain `batorbattle.space`, update `CORS_ORIGIN` to include it.
+**Domain Setup:**
+- Frontend will be: `https://batorbattle.space` (Netlify)
+- Backend will be: `https://api.batorbattle.space` (AWS App Runner - set up custom domain after deployment)
 
 ### 5. Create & Wait
 - Click "Create & deploy"

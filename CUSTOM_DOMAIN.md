@@ -1,6 +1,8 @@
 # Custom Domain Setup: batorbattle.space
 
-This guide covers setting up the custom domain `batorbattle.space` for both frontend (Netlify) and backend (AWS App Runner).
+This guide covers setting up custom domains for:
+- **Frontend (Netlify)**: `batorbattle.space` - Main website
+- **Backend (AWS App Runner)**: `api.batorbattle.space` - API server
 
 ## Frontend (Netlify) - batorbattle.space
 
@@ -42,6 +44,10 @@ In Netlify dashboard:
 - Or keep it as your App Runner URL
 
 ## Backend (AWS App Runner) - api.batorbattle.space
+
+**Domain Structure:**
+- Frontend: `https://batorbattle.space` (Netlify)
+- Backend: `https://api.batorbattle.space` (AWS App Runner)
 
 ### Step 1: Add Custom Domain in AWS App Runner
 
