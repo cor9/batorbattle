@@ -28,15 +28,15 @@ Your code has been pushed to: `https://github.com/cor9/batorbattle.git`
 Add these in the environment variables section:
 
 ```
-LIVEKIT_API_KEY=your-livekit-api-key
-LIVEKIT_API_SECRET=your-livekit-api-secret
-LIVEKIT_URL=wss://your-livekit-server.com
-PORT=3000
+LIVEKIT_API_KEY=APIgmWaQh92ZWQB
+LIVEKIT_API_SECRET=kA9rcaOjZmgCHUpqdHsrLsIJUWw3PS2Nsp0M9K5PiNO
+LIVEKIT_URL=wss://batorbattle-y2bc90qw.livekit.cloud
+PORT=8181
 NODE_ENV=production
-CORS_ORIGIN=*
+CORS_ORIGIN=https://batorbattle.space,https://www.batorbattle.space
 ```
 
-**Note**: After getting your Netlify URL, update `CORS_ORIGIN` to your Netlify domain.
+**Note**: After setting up custom domain `batorbattle.space`, update `CORS_ORIGIN` to include it.
 
 ### 5. Create & Wait
 - Click "Create & deploy"
@@ -73,15 +73,17 @@ Replace with your actual App Runner URL from step 5 above.
 - Wait 2-3 minutes
 - **Copy your Netlify URL** (e.g., `https://xxxxx.netlify.app`)
 
-## 🔄 Update CORS After Netlify Deployment
+## 🔄 Update CORS After Custom Domain Setup
 
 1. Go back to AWS App Runner
 2. Edit your service
 3. Update environment variable:
    ```
-   CORS_ORIGIN=https://your-netlify-url.netlify.app
+   CORS_ORIGIN=https://batorbattle.space,https://www.batorbattle.space
    ```
 4. Save and wait for redeployment
+
+**See CUSTOM_DOMAIN.md for detailed custom domain setup instructions.**
 
 ## ✅ Test Your Deployment
 
@@ -94,8 +96,9 @@ Replace with your actual App Runner URL from step 5 above.
 ## 📝 Important URLs to Save
 
 - **Backend URL**: `https://xxxxx.awsapprunner.com`
-- **Frontend URL**: `https://xxxxx.netlify.app`
-- **LiveKit URL**: `wss://xxxxx.livekit.cloud`
+- **Frontend URL**: `https://xxxxx.netlify.app` (or `https://batorbattle.space` after custom domain setup)
+- **Custom Domain**: `https://batorbattle.space`
+- **LiveKit URL**: `wss://batorbattle-y2bc90qw.livekit.cloud`
 
 ## 🐛 Troubleshooting
 
