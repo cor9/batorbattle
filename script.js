@@ -1402,6 +1402,14 @@ function startWarmupPhase() {
           elements.instruction.textContent = ""; // Clear instruction as game has its own UI
       }
       return; // Stop standard Bator Battle loop
+  } else if (gameType === "video-edging") {
+      // START VIDEO EDGING
+      loadVideoEdging();
+      return;
+  } else if (gameType === "hypno") {
+      // START HYPNO
+      loadHypnoExperience();
+      return;
   }
 
   // Reset visibility for standard game
