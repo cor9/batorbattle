@@ -1,8 +1,8 @@
 // Phase 2: Profile & Auth System
 // Feature flagged - only active when FEATURES.PHASE2_PROFILES is true
 
-// Make ProfileSystem globally accessible
-window.ProfileSystem = ProfileSystem;
+// Make ProfileSystem globally accessible - after definition
+// window.ProfileSystem = ProfileSystem; // Removed, will define later
 
 // Profile Management
 const ProfileSystem = {
@@ -495,3 +495,6 @@ if (document.readyState === 'loading') {
 } else {
   ProfileSystem.init();
 }
+
+// Make globally accessible
+window.ProfileSystem = ProfileSystem;
