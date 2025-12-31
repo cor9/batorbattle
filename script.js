@@ -1098,30 +1098,89 @@ function initHypnoSpiral() {
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
+  const styleSelect = document.getElementById("hypno-style");
+
+  // Ensure canvas fits screen
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+
+  // Handle resize
+  window.removeEventListener('resize', canvas.resizeHandler); // Cleanup old
+  canvas.resizeHandler = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+  };
+  window.addEventListener('resize', canvas.resizeHandler);
 
   let rotation = 0;
   let animationId;
 
   function drawSpiral() {
-    ctx.fillStyle = "#000";
+    const style = styleSelect ? styleSelect.value : 'classic';
+    const speed = parseFloat(elements.hypnoSpeed?.value || 1);
+
+    // Theme Configuration
+    let bg = '#000000';
+    let fg = '#ffffff';
+    let lineWidth = 3;
+
+    switch (style) {
+        case 'sissy':
+            bg = '#ffb6c1'; // Light pink
+            fg = '#800080'; // Purple
+            break;
+        case 'gooner':
+            bg = '#050505';
+            fg = '#00ff00'; // Terminal green
+            break;
+        case 'deepblue':
+            bg = '#000022'; // Dark blue
+            fg = '#00ffff'; // Cyan
+            break;
+        case 'rainbow':
+            bg = '#000000';
+            // Foreground calculated dynamically
+            break;
+        default: // classic
+            bg = '#000000';
+            fg = '#ffffff';
+    }
+
+    // Fill Background
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const maxRadius = Math.min(canvas.width, canvas.height) / 2;
+    // Radius should cover corners
+    const maxRadius = Math.sqrt(centerX**2 + centerY**2);
 
-    const speed = parseFloat(elements.hypnoSpeed?.value || 1);
-    rotation += 0.02 * speed;
+    rotation += 0.05 * speed;
 
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
+    // Set Stroke Style
+    if (style === 'rainbow') {
+        const hue = (Date.now() / 20) % 360;
+        fg = `hsl(${hue}, 100%, 50%)`;
+    }
+
+    ctx.strokeStyle = fg;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = 'round';
     ctx.beginPath();
 
-    for (let i = 0; i < 1000; i++) {
-      const angle = i * 0.1 + rotation;
-      const radius = (i / 1000) * maxRadius;
+    // Spiral Math
+    const coils = 10;
+    const points = 1000;
+    const spacing = maxRadius / coils;
+
+    // Draw logarithmic-ish or simple Archimedean spiral
+    for (let i = 0; i < points; i++) {
+      // Angle increases as we go out
+      const angle = (i * 0.1) + rotation;
+
+      // Radius increases linearly
+      const radius = (i / points) * maxRadius;
+
       const x = centerX + Math.cos(angle) * radius;
       const y = centerY + Math.sin(angle) * radius;
 
@@ -1134,9 +1193,20 @@ function initHypnoSpiral() {
 
     ctx.stroke();
 
-    // Add pulsing effect
-    const pulse = Math.sin(Date.now() / 500) * 0.3 + 0.7;
-    ctx.globalAlpha = pulse;
+    // Optional: Add a second interlaced spiral for some styles?
+    if (style === 'sissy' || style === 'deepblue') {
+        ctx.beginPath();
+        ctx.strokeStyle = style === 'sissy' ? '#ff69b4' : '#0000ff';
+        for (let i = 0; i < points; i++) {
+            const angle = (i * 0.1) + rotation + Math.PI; // 180 deg offset
+            const radius = (i / points) * maxRadius;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
 
     animationId = requestAnimationFrame(drawSpiral);
   }
