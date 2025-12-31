@@ -29,7 +29,7 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL || 'ws://localhost:7880';
 const rooms = new Map();
 
 // Generate LiveKit access token
-app.post('/api/getToken', (req, res) => {
+app.post('/api/getToken', async (req, res) => {
   try {
     const { roomName, participantName, canPublish = true } = req.body;
 
@@ -59,12 +59,12 @@ app.post('/api/getToken', (req, res) => {
       canSubscribe: true,
     });
 
-    const jwtToken = token.toJwt();
+    // Generate JWT token - toJwt() is async in newer SDK versions
+    const jwtToken = await token.toJwt();
 
-    // Check if token is empty object or invalid
-    if (!jwtToken || jwtToken === '{}' || (typeof jwtToken === 'object' && Object.keys(jwtToken).length === 0)) {
-      console.error('Token generation failed - empty token returned', { jwtToken, type: typeof jwtToken });
-      return res.status(500).json({ 
+    if (!jwtToken || typeof jwtToken !== 'string') {
+      console.error('Token generation failed - invalid token returned', { jwtToken, type: typeof jwtToken });
+      return res.status(500).json({
         error: 'Failed to generate token',
         debug: {
           hasKey: !!LIVEKIT_API_KEY,
