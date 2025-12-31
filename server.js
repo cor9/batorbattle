@@ -41,7 +41,7 @@ app.post('/api/getToken', (req, res) => {
     // Validate LiveKit credentials
     if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || LIVEKIT_API_KEY === 'devkey' || LIVEKIT_API_SECRET === 'secret') {
       console.error('LiveKit credentials not configured properly');
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: 'LiveKit credentials not configured',
         hasKey: !!LIVEKIT_API_KEY,
         hasSecret: !!LIVEKIT_API_SECRET
@@ -60,10 +60,21 @@ app.post('/api/getToken', (req, res) => {
     });
 
     const jwtToken = token.toJwt();
-    
-    if (!jwtToken || jwtToken === '{}') {
-      console.error('Token generation failed - empty token returned');
-      return res.status(500).json({ error: 'Failed to generate token' });
+
+    // Check if token is empty object or invalid
+    if (!jwtToken || jwtToken === '{}' || (typeof jwtToken === 'object' && Object.keys(jwtToken).length === 0)) {
+      console.error('Token generation failed - empty token returned', { jwtToken, type: typeof jwtToken });
+      return res.status(500).json({ 
+        error: 'Failed to generate token',
+        debug: {
+          hasKey: !!LIVEKIT_API_KEY,
+          keyLength: LIVEKIT_API_KEY?.length,
+          hasSecret: !!LIVEKIT_API_SECRET,
+          secretLength: LIVEKIT_API_SECRET?.length,
+          tokenType: typeof jwtToken,
+          tokenValue: jwtToken
+        }
+      });
     }
 
     res.json({
@@ -72,9 +83,9 @@ app.post('/api/getToken', (req, res) => {
     });
   } catch (error) {
     console.error('Error generating LiveKit token:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to generate token',
-      message: error.message 
+      message: error.message
     });
   }
 });
