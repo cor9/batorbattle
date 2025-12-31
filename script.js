@@ -1361,12 +1361,10 @@ function startWarmupPhase() {
   // Handle various game types
   const gameType = gameState.room?.settings?.gameType || "redlight"; // Default to main game if not set
 
-  // External Game Handling (Dice Dare, Batecards, Battleship, Blitzed Out)
+  // External Game Handling (Dice Dare, Batecards)
   const externalGames = {
       "dicedare": "https://dicedare.com",
-      "batecards": "https://batecards.com",
-      "battleship": "https://battleship.batorbattle.space", // Assuming placeholder/future url
-      "blitzedout": "https://blitzedout.batorbattle.space" // Assuming placeholder/future url
+      "batecards": "https://batecards.com"
   };
 
   if (externalGames[gameType]) {
