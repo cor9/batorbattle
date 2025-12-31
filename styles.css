@@ -796,3 +796,8 @@ body:-ms-fullscreen #game-content {
     }
 }
 
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
