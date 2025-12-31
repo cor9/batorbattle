@@ -518,7 +518,8 @@ async function joinLiveKitRoom(role) {
     // Enable camera and microphone for players
     if (role === "player") {
       try {
-        const publications = await room.localParticipant.enableCameraAndMicrophone();
+        const publications =
+          await room.localParticipant.enableCameraAndMicrophone();
         // enableCameraAndMicrophone() returns an object with videoTrackPublication and audioTrackPublication
         if (publications && publications.videoTrackPublication) {
           localVideoTrack = publications.videoTrackPublication.track;
@@ -528,12 +529,14 @@ async function joinLiveKitRoom(role) {
           localVideoTrack = publications.track;
         } else {
           // Try to get video track from local participant's video track publications
-          const videoPub = room.localParticipant.videoTrackPublications.values().next().value;
+          const videoPub = room.localParticipant.videoTrackPublications
+            .values()
+            .next().value;
           if (videoPub && videoPub.track) {
             localVideoTrack = videoPub.track;
           }
         }
-        
+
         if (localVideoTrack) {
           addLocalVideo(localVideoTrack);
         } else {
@@ -582,9 +585,9 @@ function addLocalVideo(track) {
     console.error("addLocalVideo: track is undefined");
     return;
   }
-  
+
   const video = document.createElement("video");
-  
+
   // LiveKit tracks have a mediaStreamTrack property or can be attached directly
   try {
     if (track.attach) {
@@ -602,7 +605,7 @@ function addLocalVideo(track) {
     console.error("addLocalVideo: Error attaching track", error, track);
     return;
   }
-  
+
   video.autoplay = true;
   video.muted = true;
   video.classList.add("local");
@@ -624,9 +627,9 @@ function addRemoteVideo(track, participant) {
     console.error("addRemoteVideo: track is undefined");
     return;
   }
-  
+
   const video = document.createElement("video");
-  
+
   // LiveKit tracks have an attach method or mediaStreamTrack property
   try {
     if (track.attach) {
@@ -644,7 +647,7 @@ function addRemoteVideo(track, participant) {
     console.error("addRemoteVideo: Error attaching track", error, track);
     return;
   }
-  
+
   video.autoplay = true;
 
   const container = document.createElement("div");
@@ -725,15 +728,46 @@ function updateRoomDisplay() {
 }
 
 function startBattle() {
-  if (!gameState.isHost || !socket) return;
+  console.log("startBattle called", { 
+    isHost: gameState.isHost, 
+    socket: !!socket, 
+    socketConnected: socket?.connected,
+    playerCount: gameState.room?.players?.length || 0
+  });
+  
+  if (!gameState.isHost) {
+    console.error("Cannot start battle: User is not the host");
+    alert("Only the room host can start the battle");
+    return;
+  }
+  
+  if (!socket) {
+    console.error("Cannot start battle: Socket not connected");
+    alert("Not connected to server. Please refresh the page.");
+    return;
+  }
+  
+  if (!socket.connected) {
+    console.error("Cannot start battle: Socket not connected");
+    alert("Connection lost. Please refresh the page.");
+    return;
+  }
+
+  const playerCount = gameState.room?.players?.length || 0;
+  if (playerCount < 2) {
+    console.error("Cannot start battle: Need at least 2 players");
+    alert("You need at least 2 players to start a battle");
+    return;
+  }
 
   const settings = {
-    sessionLength: parseInt(elements.roomSessionLength.value),
-    difficulty: parseInt(elements.roomDifficulty.value),
-    orgasmChance: parseInt(elements.roomOrgasmChance.value),
+    sessionLength: parseInt(elements.roomSessionLength.value) || 30,
+    difficulty: parseInt(elements.roomDifficulty.value) || 2,
+    orgasmChance: parseInt(elements.roomOrgasmChance.value) || 50,
   };
 
   gameState.room.settings = settings;
+  console.log("Emitting startGame with settings:", settings);
   socket.emit("startGame");
 }
 
