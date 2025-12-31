@@ -237,22 +237,31 @@ function setupEventListeners() {
   elements.startBattleBtn.addEventListener("click", startBattle);
   elements.leaveRoomBtn.addEventListener("click", leaveRoom);
 
-  // Copy Invite Link
+  // Copy Invite Link (Lobby)
   const copyLinkBtn = document.getElementById("copy-invite-link-btn");
   if (copyLinkBtn) {
-    copyLinkBtn.addEventListener("click", () => {
+    copyLinkBtn.addEventListener("click", () => copyInviteLink(copyLinkBtn));
+  }
+
+  // Copy Invite Link (Game Overlay)
+  const gameCopyBtn = document.getElementById("game-copy-link-btn");
+  if (gameCopyBtn) {
+    gameCopyBtn.addEventListener("click", () => copyInviteLink(gameCopyBtn));
+  }
+
+  // Helper for copying link
+  function copyInviteLink(btn) {
       const code = gameState.roomName;
       if (!code) return;
 
       const url = `${window.location.origin}${window.location.pathname}?room=${code}`;
       navigator.clipboard.writeText(url).then(() => {
-        const originalText = copyLinkBtn.textContent;
-        copyLinkBtn.textContent = "✅ Copied!";
+        const originalText = btn.textContent;
+        btn.textContent = "✅";
         setTimeout(() => {
-          copyLinkBtn.textContent = originalText;
+          btn.textContent = originalText;
         }, 2000);
       });
-    });
   }
 
   // Settings Controls
@@ -524,7 +533,21 @@ async function connectSocket() {
         gameState.room.settings.gameType = state.gameType;
       }
     }
+    // Show Game Screen
     showScreen("game-screen");
+
+    // Show Room Code in Game
+    const roomInfo = document.getElementById("game-room-info");
+    const roomText = document.getElementById("game-room-code-text");
+    if (gameState.roomName) {
+        if (roomInfo) roomInfo.classList.remove("hidden");
+        if (roomText) roomText.textContent = gameState.roomName;
+    } else {
+        if (roomInfo) roomInfo.classList.add("hidden");
+    }
+
+    // Initialize Audio
+    AudioManager.init();
     startGame();
   });
 
