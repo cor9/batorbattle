@@ -118,47 +118,50 @@
             <input type="file" id="media-file" accept="video/*,audio/*" style="margin-top: 0.5rem;" />
             <button id="load-media-btn" class="btn btn-secondary" style="margin-top: 0.5rem;">Load Media</button>
           </div>
-
-          <div class="setting-group">
-            <label for="room-session-length">
-              Session Length:
-            </label>
-            <select id="room-session-length">
-              <option value="5">5 minutes</option>
-              <option value="10">10 minutes</option>
-              <option value="15">15 minutes</option>
-              <option value="20">20 minutes</option>
-              <option value="25">25 minutes</option>
-              <option value="30" selected>30 minutes</option>
-              <option value="35">35 minutes</option>
-            </select>
-            <span id="room-session-length-value" style="display: none;"></span>
-          </div>
-          <div class="setting-group">
-            <label for="room-difficulty">
-              Difficulty: <span id="room-difficulty-value">Medium</span>
-            </label>
-            <input
-              type="range"
-              id="room-difficulty"
-              min="1"
-              max="3"
-              value="2"
-              step="1"
-            />
-          </div>
-          <div class="setting-group">
-            <label for="room-orgasm-chance">
-              Orgasm Chance: <span id="room-orgasm-chance-value">50</span>%
-            </label>
-            <input
-              type="range"
-              id="room-orgasm-chance"
-              min="0"
-              max="100"
-              value="50"
-              step="5"
-            />
+          
+          <!-- Edging Game Settings (only shown for BATOR BATTLE EDGING) -->
+          <div id="edging-settings-group">
+            <div class="setting-group">
+              <label for="room-session-length">
+                Session Length:
+              </label>
+              <select id="room-session-length">
+                <option value="5">5 minutes</option>
+                <option value="10">10 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="20">20 minutes</option>
+                <option value="25">25 minutes</option>
+                <option value="30" selected>30 minutes</option>
+                <option value="35">35 minutes</option>
+              </select>
+              <span id="room-session-length-value" style="display: none;"></span>
+            </div>
+            <div class="setting-group">
+              <label for="room-difficulty">
+                Difficulty: <span id="room-difficulty-value">Medium</span>
+              </label>
+              <input
+                type="range"
+                id="room-difficulty"
+                min="1"
+                max="3"
+                value="2"
+                step="1"
+              />
+            </div>
+            <div class="setting-group">
+              <label for="room-orgasm-chance">
+                Orgasm Chance: <span id="room-orgasm-chance-value">50</span>%
+              </label>
+              <input
+                type="range"
+                id="room-orgasm-chance"
+                min="0"
+                max="100"
+                value="50"
+                step="5"
+              />
+            </div>
           </div>
           <div class="setting-group">
             <label>

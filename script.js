@@ -294,12 +294,24 @@ function setupEventListeners() {
   elements.roomGameType.addEventListener("change", (e) => {
     const gameType = e.target.value;
     gameState.gameType = gameType;
+    
+    // Show/hide edging settings (only for redlight game)
+    const edgingSettingsGroup = document.getElementById("edging-settings-group");
+    if (edgingSettingsGroup) {
+      if (gameType === "redlight") {
+        edgingSettingsGroup.style.display = "block";
+      } else {
+        edgingSettingsGroup.style.display = "none";
+      }
+    }
+    
     // Show/hide media input for video-edging and hypno
     if (gameType === "video-edging" || gameType === "hypno") {
       elements.mediaInputGroup.style.display = "block";
     } else {
       elements.mediaInputGroup.style.display = "none";
     }
+    
     if (gameState.isHost && socket) {
       gameState.room.settings.gameType = gameType;
       socket.emit("gameStateUpdate", { settings: gameState.room.settings });
@@ -755,6 +767,28 @@ function clearVideoGrid() {
 }
 
 function updateRoomDisplay() {
+  // Show/hide edging settings based on game type
+  const gameType = gameState.room.settings.gameType || "redlight";
+  const edgingSettingsGroup = document.getElementById("edging-settings-group");
+  if (edgingSettingsGroup) {
+    if (gameType === "redlight") {
+      edgingSettingsGroup.style.display = "block";
+    } else {
+      edgingSettingsGroup.style.display = "none";
+    }
+  }
+  
+  // Show/hide media input based on game type
+  if (gameType === "video-edging" || gameType === "hypno") {
+    elements.mediaInputGroup.style.display = "block";
+  } else {
+    elements.mediaInputGroup.style.display = "none";
+  }
+  
+  // Update game type selector
+  if (gameState.room.settings.gameType) {
+    elements.roomGameType.value = gameState.room.settings.gameType;
+  }
   if (!gameState.roomName) return;
 
   elements.roomNameDisplay.textContent = gameState.roomName;
