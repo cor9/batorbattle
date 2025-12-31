@@ -517,8 +517,31 @@ async function joinLiveKitRoom(role) {
 
     // Enable camera and microphone for players
     if (role === "player") {
-      localVideoTrack = await room.localParticipant.enableCameraAndMicrophone();
-      addLocalVideo(localVideoTrack);
+      try {
+        const publications = await room.localParticipant.enableCameraAndMicrophone();
+        // enableCameraAndMicrophone() returns an object with videoTrackPublication and audioTrackPublication
+        if (publications && publications.videoTrackPublication) {
+          localVideoTrack = publications.videoTrackPublication.track;
+        } else if (publications && publications.videoTrack) {
+          localVideoTrack = publications.videoTrack;
+        } else if (publications && publications.track) {
+          localVideoTrack = publications.track;
+        } else {
+          // Try to get video track from local participant's video track publications
+          const videoPub = room.localParticipant.videoTrackPublications.values().next().value;
+          if (videoPub && videoPub.track) {
+            localVideoTrack = videoPub.track;
+          }
+        }
+        
+        if (localVideoTrack) {
+          addLocalVideo(localVideoTrack);
+        } else {
+          console.error("Failed to get local video track", publications);
+        }
+      } catch (error) {
+        console.error("Error enabling camera:", error);
+      }
     }
 
     // Handle remote participants
@@ -555,8 +578,31 @@ async function joinLiveKitRoom(role) {
 }
 
 function addLocalVideo(track) {
+  if (!track) {
+    console.error("addLocalVideo: track is undefined");
+    return;
+  }
+  
   const video = document.createElement("video");
-  video.srcObject = new MediaStream([track.mediaStreamTrack]);
+  
+  // LiveKit tracks have a mediaStreamTrack property or can be attached directly
+  try {
+    if (track.attach) {
+      // Use LiveKit's attach method if available
+      track.attach(video);
+    } else if (track.mediaStreamTrack) {
+      video.srcObject = new MediaStream([track.mediaStreamTrack]);
+    } else if (track instanceof MediaStreamTrack) {
+      video.srcObject = new MediaStream([track]);
+    } else {
+      console.error("addLocalVideo: Unable to attach track", track);
+      return;
+    }
+  } catch (error) {
+    console.error("addLocalVideo: Error attaching track", error, track);
+    return;
+  }
+  
   video.autoplay = true;
   video.muted = true;
   video.classList.add("local");
@@ -574,8 +620,31 @@ function addLocalVideo(track) {
 }
 
 function addRemoteVideo(track, participant) {
+  if (!track) {
+    console.error("addRemoteVideo: track is undefined");
+    return;
+  }
+  
   const video = document.createElement("video");
-  video.srcObject = new MediaStream([track.mediaStreamTrack]);
+  
+  // LiveKit tracks have an attach method or mediaStreamTrack property
+  try {
+    if (track.attach) {
+      // Use LiveKit's attach method if available
+      track.attach(video);
+    } else if (track.mediaStreamTrack) {
+      video.srcObject = new MediaStream([track.mediaStreamTrack]);
+    } else if (track instanceof MediaStreamTrack) {
+      video.srcObject = new MediaStream([track]);
+    } else {
+      console.error("addRemoteVideo: Unable to attach track", track);
+      return;
+    }
+  } catch (error) {
+    console.error("addRemoteVideo: Error attaching track", error, track);
+    return;
+  }
+  
   video.autoplay = true;
 
   const container = document.createElement("div");
