@@ -57,7 +57,7 @@ const gameState = {
   phase: "warmup", // 'warmup', 'playing', 'cumming', 'denied'
   sessionStartTime: null,
   sessionProgress: 0, // 0-1, how far through the session
-  gameType: "redlight", // 'redlight', 'dicedare', 'batecards', 'battleship', 'blitzedout', 'video-edging', 'hypno'
+  gameType: "redlight", // Main game: 'redlight' (BATOR BATTLE EDGING), or alternatives: 'dicedare', 'batecards', 'battleship', 'blitzedout', 'video-edging', 'hypno'
   mediaUrl: null,
 };
 
@@ -901,9 +901,10 @@ function startGame() {
   gameState.phase = "warmup";
 
   // Get game type from room settings or default
-  const gameType = gameState.gameMode === "multiplayer" 
-    ? (gameState.room.settings.gameType || "redlight")
-    : "redlight";
+  const gameType =
+    gameState.gameMode === "multiplayer"
+      ? gameState.room.settings.gameType || "redlight"
+      : "redlight";
   gameState.gameType = gameType;
 
   showScreen("game-screen");
@@ -917,7 +918,7 @@ function startGame() {
   elements.hypnoContainer?.classList.add("hidden");
 
   // Show appropriate game type
-  switch(gameType) {
+  switch (gameType) {
     case "redlight":
       elements.progressContainer?.classList.remove("hidden");
       startRedLightGame();
@@ -970,48 +971,57 @@ function startRedLightGame() {
 
 function loadExternalGame(url) {
   if (!elements.externalGameContainer || !elements.externalGameFrame) return;
-  
+
   elements.externalGameContainer.classList.remove("hidden");
   elements.externalGameFrame.src = url;
   elements.externalGameFrame.style.width = "100%";
   elements.externalGameFrame.style.height = "80vh";
   elements.externalGameFrame.style.border = "none";
-  
+
   // Try to enter fullscreen
   tryEnterFullscreen();
 }
 
 function loadVideoEdging() {
   if (!elements.videoEdgingContainer || !elements.edgingVideoPlayer) return;
-  
+
   elements.videoEdgingContainer.classList.remove("hidden");
-  
+
   if (gameState.mediaUrl) {
     elements.edgingVideoPlayer.src = gameState.mediaUrl;
-    elements.edgingVideoPlayer.play().catch(err => console.error("Video play error:", err));
+    elements.edgingVideoPlayer
+      .play()
+      .catch((err) => console.error("Video play error:", err));
   } else {
     elements.instruction.textContent = "Please load a video URL or file first";
   }
-  
+
   // Try to enter fullscreen
   tryEnterFullscreen();
 }
 
 function loadHypnoExperience() {
-  if (!elements.hypnoContainer || !elements.hypnoSpiral || !elements.hypnoAudioPlayer) return;
-  
+  if (
+    !elements.hypnoContainer ||
+    !elements.hypnoSpiral ||
+    !elements.hypnoAudioPlayer
+  )
+    return;
+
   elements.hypnoContainer.classList.remove("hidden");
-  
+
   // Initialize hypno spiral
   initHypnoSpiral();
-  
+
   if (gameState.mediaUrl) {
     elements.hypnoAudioPlayer.src = gameState.mediaUrl;
-    elements.hypnoAudioPlayer.play().catch(err => console.error("Audio play error:", err));
+    elements.hypnoAudioPlayer
+      .play()
+      .catch((err) => console.error("Audio play error:", err));
   } else {
     elements.instruction.textContent = "Please load an audio URL or file first";
   }
-  
+
   // Try to enter fullscreen
   tryEnterFullscreen();
 }
@@ -1031,56 +1041,56 @@ function loadMedia() {
 function initHypnoSpiral() {
   const canvas = elements.hypnoSpiral;
   if (!canvas) return;
-  
+
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  
+
   let rotation = 0;
   let animationId;
-  
+
   function drawSpiral() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const maxRadius = Math.min(canvas.width, canvas.height) / 2;
-    
+
     const speed = parseFloat(elements.hypnoSpeed?.value || 1);
     rotation += 0.02 * speed;
-    
+
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    
+
     for (let i = 0; i < 1000; i++) {
       const angle = i * 0.1 + rotation;
       const radius = (i / 1000) * maxRadius;
       const x = centerX + Math.cos(angle) * radius;
       const y = centerY + Math.sin(angle) * radius;
-      
+
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
         ctx.lineTo(x, y);
       }
     }
-    
+
     ctx.stroke();
-    
+
     // Add pulsing effect
     const pulse = Math.sin(Date.now() / 500) * 0.3 + 0.7;
     ctx.globalAlpha = pulse;
-    
+
     animationId = requestAnimationFrame(drawSpiral);
   }
-  
+
   drawSpiral();
-  
+
   // Store animation ID for cleanup
   canvas.animationId = animationId;
-  
+
   // Handle speed changes
   if (elements.hypnoSpeed) {
     elements.hypnoSpeed.addEventListener("input", (e) => {
@@ -1090,7 +1100,7 @@ function initHypnoSpiral() {
       }
     });
   }
-  
+
   // Handle play/pause
   if (elements.hypnoPlayPause && elements.hypnoAudioPlayer) {
     elements.hypnoPlayPause.addEventListener("click", () => {
@@ -1103,7 +1113,7 @@ function initHypnoSpiral() {
       }
     });
   }
-  
+
   // Handle window resize
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
