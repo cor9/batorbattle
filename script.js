@@ -62,65 +62,12 @@ const gameState = {
 };
 
 // Instructions pool from gamescreens.md
-const instructions = {
-  stroke: [
-    "You can jerk off now!",
-    "Jerk off as fast as you can NOW!",
-    "Go HARD and FAST",
-    "Jerk off",
-    "Do you want to cum?",
-    "Getting close?",
-    "Wank it",
-    "Wank",
-    "Stroke",
-    "Go SLOW and steady...",
-    "Use your other hand!",
-    "Jerk off ONLY the tip, use only TWO FINGERS.",
-    "Jerk off NOW",
-    "Squeeze your balls",
-    "Gently slap your balls",
-    "Slide up and down your length",
-    "Pound your penis",
-    "Slap that Dick on your belly",
-    "Bate that dong",
-    "Grip it Harder",
-    "Light, quick strokes"
-  ],
-  stop: [
-    "STOP TOUCHING! Calm down, be ready for the next one...",
-    "No touching!",
-    "STOP! Quick break ;-)",
-    "Stop! and....",
-    "Hands off your cock NOW",
-    "Hands behind your head",
-    "Fingers on your nipples.",
-    "Flex your biceps",
-    "Lick your biceps",
-    "Feel your body with your hands",
-    "STOP NOW",
-    "STOP",
-    "DON'T CUM! Stop touching.",
-    "Rub your chest and belly"
-  ],
-  denied: [
-    "STOP! Sorry, no cumshot for you.",
-    "Try again, maybe you will get lucky... Now get your hands off your dick until this is over.",
-    "Uh Oh! You don't get to squirt this time",
-    "Game Over - No release this time",
-    "Don't hate me, Bator but NO NUT FOR YOU",
-    "Soo close but no cigar. You may NOT cum.",
-    "No Happy Ending today.",
-    "You are NOT allowed to cum for this session."
-  ],
-  cum: [
-    "CUM! DO IT NOW",
-    "CUM! Take your time, no rush ;)",
-    "CUM NOW! Make it the biggest orgasm you ever had.",
-    "CUM!",
-    "You can cum now. GO!",
-    "Ejaculation may commence",
-    "IT'S CUM TIME, Bro!"
-  ],
+// Instructions pool loaded from gamescreens.js
+const instructions = window.GAME_INSTRUCTIONS || {
+  stroke: ["Stroke"],
+  stop: ["Stop"],
+  denied: ["Denied"],
+  cum: ["Cum"],
 };
 
 // LiveKit and Socket.io connections
