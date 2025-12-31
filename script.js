@@ -1207,11 +1207,32 @@ function startWarmupPhase() {
   elements.gameScreen.className = "screen active warmup-state";
 
   // Update edge bar to show zones
+  // Update edge bar to show zones
   updateEdgeBarZones();
 
-  // After 10 seconds, start the actual game
+  // Animate the bar to 100% over the warmup duration
+  // Use a slight delay to ensure the browser registers the transition property change
+  setTimeout(() => {
+    elements.edgeBar.style.transition = "width 45s linear";
+    elements.edgeBar.style.width = "100%";
+
+    // Animate percentage text loosely (optional, but nice)
+    // We won't do precise JS animation for text to keep it simple,
+    // or we could let the mutation observer handle it if we had one.
+    // Let's just set the bar.
+  }, 50);
+
+  // After 45 seconds (warmup duration), start the actual game
   setTimeout(() => {
     gameState.phase = "playing";
+
+    // Reset visuals for game start
+    elements.edgeBar.style.transition = "width 1s ease";
+    elements.edgeBar.style.width = "0%";
+    gameState.edgeLevel = 0;
+    elements.edgePercentage.textContent = "0";
+
+    // Reset instruction styles
     elements.instruction.style.fontSize = "";
     elements.instruction.style.lineHeight = "";
     elements.instruction.style.textAlign = "";
@@ -1226,7 +1247,7 @@ function startWarmupPhase() {
 
     // Try to enter fullscreen
     tryEnterFullscreen();
-  }, 10000);
+  }, 45000);
 }
 
 function startSessionTimer() {
