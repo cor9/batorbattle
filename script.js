@@ -201,16 +201,7 @@ const elements = {
   hypnoPlayPause: document.getElementById("hypno-play-pause"),
   hypnoSpeed: document.getElementById("hypno-speed"),
   hypnoSpeedValue: document.getElementById("hypno-speed-value"),
-  externalGameContainer: document.getElementById("external-game-container"),
-  externalGameFrame: document.getElementById("external-game-frame"),
-  videoEdgingContainer: document.getElementById("video-edging-container"),
-  edgingVideoPlayer: document.getElementById("edging-video-player"),
-  hypnoContainer: document.getElementById("hypno-container"),
-  hypnoSpiral: document.getElementById("hypno-spiral"),
-  hypnoAudioPlayer: document.getElementById("hypno-audio-player"),
-  hypnoPlayPause: document.getElementById("hypno-play-pause"),
-  hypnoSpeed: document.getElementById("hypno-speed"),
-  hypnoSpeedValue: document.getElementById("hypno-speed-value"),
+
   pauseBtn: document.getElementById("pause-btn"),
   failedBtn: document.getElementById("failed-btn"),
   endGameBtn: document.getElementById("end-game-btn"),
@@ -833,12 +824,8 @@ function updateRoomDisplay() {
   if (gameState.isHost) {
     const gameType = gameState.room.settings.gameType || "redlight";
     // Only require 2 players for edging game
-    if (gameType === "redlight") {
-      elements.startBattleBtn.disabled = playerCount < 2;
-    } else {
-      // Other games can start with 1+ players
-      elements.startBattleBtn.disabled = playerCount < 1;
-    }
+    // Allow starting with 1 player for testing
+    elements.startBattleBtn.disabled = playerCount < 1;
   } else {
     elements.startBattleBtn.style.display = "none";
   }
@@ -888,11 +875,11 @@ function startBattle() {
 
   const gameType = elements.roomGameType?.value || "redlight";
   const playerCount = gameState.room?.players?.length || 0;
-  
-  // For edging game, require at least 2 players
-  if (gameType === "redlight" && playerCount < 2) {
-    console.error("Cannot start battle: Need at least 2 players");
-    alert("You need at least 2 players to start a battle");
+
+
+  if (playerCount < 1) {
+    console.error("Cannot start battle: Need at least 1 player");
+    alert("You need at least 1 player to start a battle");
     return;
   }
 
@@ -917,7 +904,7 @@ function startBattle() {
 
   gameState.room.settings = { ...gameState.room.settings, ...settings };
   gameState.gameType = gameType;
-  
+
   console.log("Emitting startGame with settings:", settings);
   socket.emit("startGame", { gameType: gameType });
 }
