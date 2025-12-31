@@ -190,6 +190,17 @@ const elements = {
 function init() {
   setupEventListeners();
   updateSettingsDisplay();
+
+  // Check for room invite code in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomCode = urlParams.get('room');
+  if (roomCode) {
+    const roomInput = document.getElementById('room-code');
+    if (roomInput) {
+      roomInput.value = roomCode;
+      // Optionally could auto-focus or highlight join section
+    }
+  }
 }
 
 // Event Listeners
@@ -225,6 +236,26 @@ function setupEventListeners() {
   // Room waiting
   elements.startBattleBtn.addEventListener("click", startBattle);
   elements.leaveRoomBtn.addEventListener("click", leaveRoom);
+
+  // Copy Invite Link
+  const copyLinkBtn = document.getElementById("copy-invite-link-btn");
+  if (copyLinkBtn) {
+    copyLinkBtn.addEventListener("click", () => {
+      const code = gameState.roomName;
+      if (!code) return;
+
+      const url = `${window.location.origin}${window.location.pathname}?room=${code}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const originalText = copyLinkBtn.textContent;
+        copyLinkBtn.textContent = "✅ Copied!";
+        setTimeout(() => {
+          copyLinkBtn.textContent = originalText;
+        }, 2000);
+      });
+    });
+  }
+
+  // Settings Controls
   elements.roomSessionLength.addEventListener("change", (e) => {
     const value = parseInt(e.target.value);
     if (gameState.isHost && socket) {
