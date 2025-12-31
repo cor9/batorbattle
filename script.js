@@ -2,6 +2,12 @@
 const API_URL =
   (window.APP_CONFIG && window.APP_CONFIG.API_URL) || "http://localhost:8181";
 
+// Feature Flags
+const FEATURES = (window.APP_CONFIG && window.APP_CONFIG.FEATURES) || {
+  PHASE2_PROFILES: false,
+};
+window.FEATURES = FEATURES;
+
 // Game State
 const gameState = {
   currentScreen: "age-gate",
@@ -59,7 +65,11 @@ const gameState = {
   sessionProgress: 0, // 0-1, how far through the session
   gameType: "redlight", // Main game: 'redlight' (BATOR BATTLE EDGING), or alternatives: 'dicedare', 'batecards', 'battleship', 'blitzedout', 'video-edging', 'hypno'
   mediaUrl: null,
+  profile: null, // User profile (Phase 2)
+  friends: [], // Friends list (Phase 2)
+  blockedUsers: [], // Blocked users list (Phase 2)
 };
+window.gameState = gameState;
 
 // Instructions pool from gamescreens.md
 // Instructions pool loaded from gamescreens.js
@@ -185,6 +195,14 @@ function init() {
 function setupEventListeners() {
   // Age gate
   elements.enterBtn.addEventListener("click", () => {
+    // Phase 2: Check for profile if enabled
+    if (FEATURES.PHASE2_PROFILES && window.ProfileSystem) {
+      const profile = ProfileSystem.loadProfile();
+      if (!profile) {
+        showScreen("profile-screen");
+        return;
+      }
+    }
     showScreen("lobby-screen");
   });
 
@@ -437,6 +455,7 @@ async function connectSocket() {
       username: gameState.username,
       role: gameState.role,
       settings: gameState.room.settings,
+      profile: gameState.profile, // Phase 2: Send profile
     });
   });
 
@@ -483,6 +502,12 @@ async function connectSocket() {
 
   socket.on("playerUpdate", (data) => {
     updatePlayerRanking(data);
+  });
+
+  socket.on("onlineUsersUpdate", (users) => {
+    if (window.ProfileSystem && window.ProfileSystem.updateOnlineUsers) {
+      window.ProfileSystem.updateOnlineUsers(users);
+    }
   });
 
   socket.on("gameEnd", (data) => {

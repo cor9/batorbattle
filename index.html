@@ -25,6 +25,77 @@
       </div>
     </div>
 
+    <!-- Profile Creation/Edit Screen (Phase 2) -->
+    <div id="profile-screen" class="screen">
+      <div class="profile-content">
+        <h1 class="profile-header">Setup Profile</h1>
+
+        <label for="profile-photo" class="profile-photo-upload">
+          <img id="profile-photo-preview" src="" alt="Profile Preview" />
+          <input type="file" id="profile-photo" accept="image/*" style="display: none;" />
+          <div id="photo-placeholder" style="font-size: 2rem;">📷</div>
+        </label>
+
+        <div class="input-group">
+          <label for="profile-name">Display Name *</label>
+          <input type="text" id="profile-name" placeholder="Enter your display name" maxlength="30" />
+        </div>
+
+        <div class="input-group">
+          <label for="profile-age">Age Range</label>
+          <select id="profile-age" style="width: 100%; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">
+            <option value="">Select Age</option>
+            <option value="18-20">18-20</option>
+            <option value="21-29">21-29</option>
+            <option value="30-39">30-39</option>
+            <option value="40-49">40-49</option>
+            <option value="50-59">50-59</option>
+            <option value="60+">60+</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="profile-orientation">Orientation</label>
+          <select id="profile-orientation" style="width: 100%; padding: 10px; border-radius: 5px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3);">
+            <option value="">Select Orientation</option>
+            <option value="Gay">Gay</option>
+            <option value="Bi">Bi</option>
+            <option value="Straight">Straight</option>
+            <option value="Queer">Queer</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>About Me Tags</label>
+          <div class="tags-container" id="about-me-tags">
+            <!-- Tags wil serve as checkboxes styled as pills -->
+            <label><input type="checkbox" class="tag-checkbox" value="Dom"><span class="tag-label">Dom</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Sub"><span class="tag-label">Sub</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Switch"><span class="tag-label">Switch</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Bator"><span class="tag-label">Bator</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Gooner"><span class="tag-label">Gooner</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Exhibitionist"><span class="tag-label">Exhibitionist</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Voyeur"><span class="tag-label">Voyeur</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Kinky"><span class="tag-label">Kinky</span></label>
+            <label><input type="checkbox" class="tag-checkbox" value="Vanilla"><span class="tag-label">Vanilla</span></label>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Social Links (Optional)</label>
+          <input type="text" id="profile-link-x" placeholder="X (Twitter) Username/URL" style="margin-bottom: 5px;" />
+          <input type="text" id="profile-link-bluesky" placeholder="Bluesky Username/URL" style="margin-bottom: 5px;" />
+          <input type="text" id="profile-link-discord" placeholder="Discord Username" style="margin-bottom: 5px;" />
+        </div>
+
+        <div class="button-group">
+          <button id="save-profile-btn" class="btn btn-primary">Save Profile</button>
+          <button id="skip-profile-btn" class="btn btn-secondary">Guest Mode</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Lobby/Room Screen -->
     <div id="lobby-screen" class="screen">
       <div class="lobby-content">
@@ -349,6 +420,36 @@
     <!-- Floating Chat Toggle Button -->
     <button id="chat-toggle-btn" class="chat-toggle-btn">💬</button>
 
+    <!-- Online Users Sidebar (Phase 2) -->
+    <div id="online-users-sidebar" class="online-users-sidebar hidden">
+      <div class="online-users-header">
+        <h3>Online Users</h3>
+        <button id="toggle-online-users" class="btn btn-sm btn-secondary">Close</button>
+      </div>
+      <div id="online-users-list" class="online-users-list">
+        <!-- Users injected here -->
+      </div>
+    </div>
+
+    <!-- Profile View Modal (Phase 2) -->
+    <div id="profile-view-modal" class="overlay hidden">
+      <div class="end-content" style="max-width: 400px;">
+        <div id="profile-view-content"></div>
+        <div class="button-group" style="margin-top: 1rem;">
+          <button id="dm-user-btn" class="btn btn-primary">Message</button>
+          <button id="add-friend-btn" class="btn btn-secondary">Add Friend</button>
+        </div>
+        <div class="button-group" style="margin-top: 0.5rem;">
+          <button id="block-user-btn" class="btn btn-secondary" style="background: #d32f2f;">Block</button>
+          <button id="close-profile-modal" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 Floating Buttons -->
+    <button id="show-online-users-btn" class="floating-btn" title="Online Users">👥</button>
+    <button id="edit-profile-btn" class="floating-btn" title="Edit Profile" style="bottom: 80px;">✏️</button>
+
     <!-- Chat Sidebar -->
     <div id="chat-sidebar" class="chat-sidebar">
       <div id="chat-header" class="chat-header">
@@ -376,6 +477,7 @@
     </div>
 
     <script src="config.js"></script>
+    <script src="profile-system.js"></script>
     <script src="gamescreens.js"></script>
     <script src="script.js"></script>
   </body>

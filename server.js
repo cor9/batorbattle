@@ -165,12 +165,17 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   // Join a room
-  socket.on('joinRoom', ({ roomName, username, role, settings }) => {
+  socket.on('joinRoom', ({ roomName, username, role, settings, profile }) => {
     socket.join(roomName);
     socket.roomName = roomName;
     socket.username = username;
     socket.role = role;
     socket.userId = socket.id;
+    // Phase 2: Store profile on socket for reference
+    if (profile) {
+        socket.profile = profile;
+        socket.userId = profile.userId || socket.id;
+    }
 
     // Initialize room if it doesn't exist
     if (!rooms.has(roomName)) {
@@ -194,6 +199,8 @@ io.on('connection', (socket) => {
           edgeLevel: 0,
           failed: false,
           score: 0,
+          profile: profile, // Phase 2
+          userId: (profile && profile.userId) || socket.id // Phase 2
         });
       } else {
         // Room full, force spectator
@@ -206,6 +213,8 @@ io.on('connection', (socket) => {
       room.spectators.push({
         id: socket.id,
         username,
+        profile: profile, // Phase 2
+        userId: (profile && profile.userId) || socket.id // Phase 2
       });
     }
 
@@ -236,6 +245,15 @@ io.on('connection', (socket) => {
     if (room.gameState) {
       socket.emit('gameState', room.gameState);
     }
+
+    // Phase 2: Update online users list for everyone
+    const allUsers = [...room.players, ...room.spectators].map(u => ({
+        userId: u.userId || u.username,
+        username: u.username,
+        profile: u.profile,
+        status: u.failed ? 'Ruined' : 'Stroking'
+    }));
+    io.to(roomName).emit('onlineUsersUpdate', allUsers);
   });
 
   // Chat messages
@@ -373,6 +391,61 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Phase 2: Profile & Online Users
+  socket.on('profileUpdate', ({ userId, profile }) => {
+    // Determine which list (players/spectators) the user is in
+    if (!socket.roomName) return;
+    const room = rooms.get(socket.roomName);
+    if (!room) return;
+
+    // Update in memory lists
+    const p = room.players.find(x => x.id === socket.id);
+    if (p) {
+        p.userId = userId;
+        p.profile = profile;
+    }
+    const s = room.spectators.find(x => x.id === socket.id);
+    if (s) {
+        s.userId = userId;
+        s.profile = profile;
+    }
+
+    // Broadcast updated online users list to room
+    // Collect all unique users
+    const allUsers = [...room.players, ...room.spectators].map(u => ({
+        userId: u.userId || u.username, // Fallback if no profile ID
+        username: u.username,
+        profile: u.profile,
+        status: u.failed ? 'Ruined' : 'Stroking'
+    }));
+
+    io.to(socket.roomName).emit('onlineUsersUpdate', allUsers);
+  });
+
+  socket.on('friendUpdate', ({ userId, action }) => {
+      // Just for logging/stats in this improved version,
+      // actual friend logic is client-side localStorage in this implementation phase.
+      // But we could broadcast "Friend Request" here if we wanted.
+  });
+
+  socket.on('blockUpdate', ({ userId, action }) => {
+      // Similarly, block logic is client-side for now to avoid complexity
+  });
+
+  socket.on('requestOnlineUsers', () => {
+    if (!socket.roomName) return;
+    const room = rooms.get(socket.roomName);
+    if (!room) return;
+
+    const allUsers = [...room.players, ...room.spectators].map(u => ({
+        userId: u.userId || u.username || 'unknown',
+        username: u.username,
+        profile: u.profile,
+        status: 'Online'
+    }));
+    socket.emit('onlineUsersUpdate', allUsers);
+  });
+
   // Disconnect handling
   socket.on('disconnect', () => {
     if (!socket.roomName) return;
@@ -409,6 +482,15 @@ io.on('connection', (socket) => {
       })),
       settings: room.settings,
     });
+
+    // Update online users list for others
+    const allUsers = [...room.players, ...room.spectators].map(u => ({
+        userId: u.userId || u.username || 'unknown',
+        username: u.username,
+        profile: u.profile,
+        status: 'Online'
+    }));
+    io.to(socket.roomName).emit('onlineUsersUpdate', allUsers);
 
     // Clean up empty rooms
     if (room.players.length === 0 && room.spectators.length === 0) {
