@@ -1251,10 +1251,8 @@ function updateSessionTimer() {
 
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000);
-  elements.timerDisplay.textContent = `${String(minutes).padStart(
-    2,
-    "0"
-  )}:${String(seconds).padStart(2, "0")}`;
+  // Timer hidden for surprise element
+  // elements.timerDisplay.textContent = ...
 
   // Update edge bar zones display
   updateEdgeBarZones();
@@ -1341,65 +1339,122 @@ function changeState() {
   const diff = gameState.difficultySettings[settings.difficulty];
 
   // Speed multiplier based on session progress
-  // Last quarter (75%+) gets progressively faster
   let speedMultiplier = 1;
   if (gameState.sessionProgress >= 0.75) {
-    // In last quarter, speed up: 0.75 = 1x, 1.0 = 3x
     const lastQuarterProgress = (gameState.sessionProgress - 0.75) / 0.25;
     speedMultiplier = 1 + lastQuarterProgress * 2; // 1x to 3x speed
   }
 
+  // Calculate duration first so we can animate the bar layout
+  let duration;
   if (gameState.isStroking) {
-    elements.gameScreen.className = "screen active stroke-state";
-    const randomInstruction =
-      instructions.stroke[
-        Math.floor(Math.random() * instructions.stroke.length)
-      ];
-    elements.instruction.textContent = randomInstruction;
-
-    const edgeGain = diff.edgeGain + (gameState.edgeLevel / 100) * 5;
-    updateEdge(edgeGain);
-
     const baseTime =
       diff.strokeMin + Math.random() * (diff.strokeMax - diff.strokeMin);
-    const escalationFactor = 1 - gameState.edgeLevel / 200;
-    // Apply speed multiplier - faster in last quarter
-    const nextTime = Math.max(
+    const escalationFactor = 1 - gameState.edgeLevel / 200; // Shorter strokes as we get edgier? Actually standard logic
+    duration = Math.max(
       2000,
       (baseTime * escalationFactor) / speedMultiplier
     );
+  } else {
+    const baseTime =
+      diff.stopMin + Math.random() * (diff.stopMax - diff.stopMin);
+    duration = Math.max(1500, baseTime / speedMultiplier);
+  }
 
-    gameState.timer = setTimeout(changeState, nextTime);
+  // Ensure duration is integer
+  duration = Math.round(duration);
+
+  // Apply transition to bar
+  elements.edgeBar.style.transition = `width ${duration}ms linear`;
+
+  if (gameState.isStroking) {
+    elements.gameScreen.className = "screen active stroke-state";
+    const randomInstruction =
+      instructions.stroke[Math.floor(Math.random() * instructions.stroke.length)];
+    elements.instruction.textContent = randomInstruction;
 
     if (gameState.settings.soundEnabled) {
       playSound("stroke");
     }
+
+    // "Get to the edge everytime" logic
+    // Target a high level, effectively pacing the user to the edge
+    // Base target 90-98%
+    let targetLevel = 90 + Math.random() * 9;
+
+    // Check if we should actually trigger "Edge Reached" (Orgasm/Denial chance)
+    // We only check for 100% if the roll allows
+    // But since "handleEdgeReached" handles the probability of Cum vs Denied,
+    // we just decide here IF we want to hit 100%.
+    // Let's make hitting 100% happen occasionally to allow the game to end/deny.
+    // Random chance to push to 100% based on difficulty?
+    // Or just simple: 10% chance to test the edge fully
+    if (Math.random() < 0.15) {
+        targetLevel = 100;
+    }
+
+    // Update state
+    gameState.edgeLevel = targetLevel;
+
+    // Animate Visuals
+    elements.edgeBar.style.width = targetLevel + "%";
+    elements.edgePercentage.textContent = Math.round(targetLevel);
+    updateEdgeBarZones();
+
+    // Broadcast
+    if (gameState.gameMode === "multiplayer" && socket && gameState.isHost) {
+        socket.emit("gameStateUpdate", {
+            isStroking: gameState.isStroking,
+            instruction: elements.instruction.textContent,
+        });
+        socket.emit("playerUpdate", {
+            edgeLevel: gameState.edgeLevel,
+            failed: false,
+        });
+    }
+
+    // Next Step
+    if (targetLevel >= 100) {
+        // At the end of the duration, trigger edge reached
+        gameState.timer = setTimeout(handleEdgeReached, duration);
+    } else {
+        gameState.timer = setTimeout(changeState, duration);
+    }
+
   } else {
     elements.gameScreen.className = "screen active stop-state";
     const randomInstruction =
       instructions.stop[Math.floor(Math.random() * instructions.stop.length)];
     elements.instruction.textContent = randomInstruction;
 
-    updateEdge(-diff.edgeLoss);
-
-    const baseTime =
-      diff.stopMin + Math.random() * (diff.stopMax - diff.stopMin);
-    // Apply speed multiplier - faster in last quarter
-    const nextTime = Math.max(1500, baseTime / speedMultiplier);
-
-    gameState.timer = setTimeout(changeState, nextTime);
-
     if (gameState.settings.soundEnabled) {
       playSound("stop");
     }
-  }
 
-  // Broadcast state in multiplayer
-  if (gameState.gameMode === "multiplayer" && socket && gameState.isHost) {
-    socket.emit("gameStateUpdate", {
-      isStroking: gameState.isStroking,
-      instruction: elements.instruction.textContent,
-    });
+    // Drop down significantly
+    const dropAmount = 20 + Math.random() * 20;
+    let targetLevel = Math.max(0, gameState.edgeLevel - dropAmount);
+
+    // Update state
+    gameState.edgeLevel = targetLevel;
+
+    // Animate Visuals
+    elements.edgeBar.style.width = targetLevel + "%";
+    elements.edgePercentage.textContent = Math.round(targetLevel);
+    updateEdgeBarZones();
+
+    if (gameState.gameMode === "multiplayer" && socket && gameState.isHost) {
+        socket.emit("gameStateUpdate", {
+            isStroking: gameState.isStroking,
+            instruction: elements.instruction.textContent,
+        });
+        socket.emit("playerUpdate", {
+            edgeLevel: gameState.edgeLevel,
+            failed: false,
+        });
+    }
+
+    gameState.timer = setTimeout(changeState, duration);
   }
 }
 
@@ -1415,32 +1470,22 @@ function updateGameState(state) {
   }
 }
 
+// Deprecated in favor of direct updates in changeState, but kept for compatibility if called elsewhere
 function updateEdge(amount) {
-  gameState.edgeLevel = Math.max(
-    0,
-    Math.min(100, gameState.edgeLevel + amount)
-  );
-  elements.edgeBar.style.width = gameState.edgeLevel + "%";
-  elements.edgePercentage.textContent = Math.round(gameState.edgeLevel);
-
-  // Update zone display
-  updateEdgeBarZones();
-
-  // Broadcast in multiplayer
-  if (gameState.gameMode === "multiplayer" && socket) {
-    socket.emit("playerUpdate", {
-      edgeLevel: gameState.edgeLevel,
-      failed: false,
-    });
-  }
-
-  if (gameState.edgeLevel >= 100) {
-    handleEdgeReached();
-  }
+   // Minimal implementation just in case
+   gameState.edgeLevel = Math.max(0, Math.min(100, gameState.edgeLevel + amount));
+   elements.edgeBar.style.transition = "width 0.3s ease"; // Default fast transition for manual updates
+   elements.edgeBar.style.width = gameState.edgeLevel + "%";
+   elements.edgePercentage.textContent = Math.round(gameState.edgeLevel);
+   updateEdgeBarZones();
 }
 
 function handleEdgeReached() {
   clearTimeout(gameState.timer);
+
+  // Snap to 100 if we aren't there visually
+  elements.edgeBar.style.transition = "width 0.2s ease";
+  elements.edgeBar.style.width = "100%";
 
   const settings =
     gameState.gameMode === "multiplayer"
@@ -1473,7 +1518,12 @@ function handleEdgeReached() {
     setTimeout(() => {
       gameState.phase = "playing";
       gameState.edgeLevel = 20;
-      updateEdge(0);
+
+      // Animate reset
+      elements.edgeBar.style.transition = "width 1s ease";
+      elements.edgeBar.style.width = "20%";
+      elements.edgePercentage.textContent = "20";
+
       if (gameState.isPlaying && !gameState.isPaused) {
         changeState();
       }
@@ -1558,9 +1608,11 @@ function resetGame() {
   clearInterval(gameState.sessionTimer);
 
   elements.edgeBar.style.width = "0%";
+  elements.edgeBar.style.transition = "none"; // Reset transition
   elements.edgePercentage.textContent = "0";
   elements.instruction.textContent = "Get Ready...";
-  elements.timerDisplay.textContent = "00:00";
+  // Timer hidden
+  elements.timerDisplay.textContent = "";
   elements.gameScreen.className = "screen active";
   elements.pauseBtn.textContent = "Pause";
 }
