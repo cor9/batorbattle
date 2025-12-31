@@ -1982,5 +1982,15 @@ function playSound(type) {
   oscillator.stop(audioContext.currentTime + 0.1);
 }
 
+const AudioManager = {
+  init() {
+    this.context = new (window.AudioContext || window.webkitAudioContext)();
+  },
+  play(type) {
+    if (!this.context) this.init();
+    playSound(type);
+  }
+};
+
 // Initialize on load
 document.addEventListener("DOMContentLoaded", init);
