@@ -1081,6 +1081,18 @@ body:-ms-fullscreen #game-content {
     text-align: center;
 }
 
+#profil#edging-video-player,
+#edging-iframe-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: black;
+  border: none;
+}
+#edging-iframe-player.hidden {
+  display: none;
+}
+
 #profile-photo-preview {
     width: 100%;
     height: 100%;

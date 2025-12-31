@@ -152,7 +152,9 @@ const elements = {
   externalGameContainer: document.getElementById("external-game-container"),
   externalGameFrame: document.getElementById("external-game-frame"),
   videoEdgingContainer: document.getElementById("video-edging-container"),
+  // Video Edging
   edgingVideoPlayer: document.getElementById("edging-video-player"),
+  edgingIframePlayer: document.getElementById("edging-iframe-player"),
   hypnoContainer: document.getElementById("hypno-container"),
   hypnoSpiral: document.getElementById("hypno-spiral"),
   hypnoAudioPlayer: document.getElementById("hypno-audio-player"),
@@ -939,6 +941,7 @@ function startBattle() {
   if (gameType === "video-edging" || gameType === "hypno") {
     if (gameState.mediaUrl) {
       settings.mediaUrl = gameState.mediaUrl;
+      settings.isEmbed = gameState.isEmbed;
     }
   }
 
@@ -1090,12 +1093,26 @@ function loadExternalGame(url) {
 }
 
 function loadVideoEdging() {
-  if (!elements.videoEdgingContainer || !elements.edgingVideoPlayer) return;
+  if (!elements.videoEdgingContainer) return;
 
   elements.videoEdgingContainer.classList.remove("hidden");
 
-  if (gameState.mediaUrl) {
-    elements.edgingVideoPlayer.src = gameState.mediaUrl;
+  // If using iframe, just ensure it's visible. If video, try to play.
+  if (gameState.isEmbed) {
+       elements.edgingIframePlayer.classList.remove("hidden");
+       elements.edgingVideoPlayer.classList.add("hidden");
+       // Iframe usually auto-plays via 'src' attribute
+  } else if (elements.edgingVideoPlayer && gameState.mediaUrl) {
+    elements.edgingIframePlayer.classList.add("hidden");
+    elements.edgingVideoPlayer.classList.remove("hidden");
+
+    // Only set src if different
+    const currentSrc = elements.edgingVideoPlayer.src;
+    // ... (rest of logic)
+
+    if (!currentSrc || currentSrc !== gameState.mediaUrl) {
+      elements.edgingVideoPlayer.src = gameState.mediaUrl;
+    }
     elements.edgingVideoPlayer
       .play()
       .catch((err) => console.error("Video play error:", err));
@@ -1141,6 +1158,50 @@ function loadHypnoExperience() {
   tryEnterFullscreen();
 }
 
+// Convert standard URLs to Embed URLs for popular sites
+function getEmbedUrl(url) {
+    let embedUrl = null;
+
+    // Eporner: eporner.com/video-ID/ -> eporner.com/embed/ID/
+    const epornerMatch = url.match(/eporner\.com\/video-([^/]+)/);
+    if (epornerMatch) {
+       return `https://www.eporner.com/embed/${epornerMatch[1]}/`;
+    }
+
+    // RedGifs: redgifs.com/watch/ID -> redgifs.com/ifr/ID
+    const redgifsMatch = url.match(/redgifs\.com\/watch\/([^/]+)/);
+    if (redgifsMatch) {
+        return `https://www.redgifs.com/ifr/${redgifsMatch[1]}`;
+    }
+
+    // Pornhub: title not needed
+    const phMatch = url.match(/pornhub\.com\/view_video\.php\?viewkey=([^&]+)/);
+    if (phMatch) {
+        return `https://www.pornhub.com/embed/${phMatch[1]}`;
+    }
+
+    // XVideos
+    const xvidMatch = url.match(/xvideos\.com\/video(\d+)/);
+    if (xvidMatch) {
+        return `https://www.xvideos.com/embedframe/${xvidMatch[1]}`;
+    }
+
+    // SpankBang
+    const sbMatch = url.match(/spankbang\.com\/([\w]+)\/video/);
+    if (sbMatch) {
+        return `https://spankbang.com/${sbMatch[1]}/embed/`;
+    }
+
+    // XNXX - complex ID often needed, but basic ID sometimes works: xnxx.com/video-ID/...
+    // XNXX Embed format: https://www.xnxx.com/embedframe/ID
+    const xnxxMatch = url.match(/xnxx\.com\/video-([0-9]+)/);
+    if (xnxxMatch) {
+        return `https://www.xnxx.com/embedframe/${xnxxMatch[1]}`;
+    }
+
+    return null;
+}
+
 async function loadMedia() {
   const url = elements.mediaUrl?.value.trim();
   if (!url) {
@@ -1153,39 +1214,49 @@ async function loadMedia() {
 
   try {
     let finalUrl = url;
+    let isEmbed = false;
 
-    // Check for both video and audio extensions
-    const isDirectFile = /\.(mp4|webm|ogg|mov|mp3|wav|m4a|aac)$/i.test(url);
+    // 1. Check for Embeddable content first
+    const embedUrl = getEmbedUrl(url);
+    if (embedUrl) {
+        finalUrl = embedUrl;
+        isEmbed = true;
+        console.log("Detected embeddable URL:", finalUrl);
+    } else {
+        // 2. Normal File/Extraction Check
+        const isDirectFile = /\.(mp4|webm|ogg|mov|mp3|wav|m4a|aac)$/i.test(url);
+        if (!isDirectFile && url.startsWith('http')) {
+            try {
+                console.log("Attempting to extract video from:", url);
+                const res = await fetch(`${API_URL}/api/extract-video?url=${encodeURIComponent(url)}`);
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-    // If it's NOT a direct file and starts with http, try to extract
-    if (!isDirectFile && url.startsWith('http')) {
-        try {
-            console.log("Attempting to extract video from:", url);
-            const res = await fetch(`${API_URL}/api/extract-video?url=${encodeURIComponent(url)}`);
-            if (!res.ok) throw new Error(`Server returned ${res.status}`);
-
-            const data = await res.json();
-            if (data.videoUrl) {
-                finalUrl = data.videoUrl;
-                console.log("Extracted media URL:", finalUrl);
-            } else {
-                console.warn("No videoUrl found in response, using original URL.");
+                const data = await res.json();
+                if (data.videoUrl) {
+                    finalUrl = data.videoUrl;
+                    console.log("Extracted media URL:", finalUrl);
+                }
+            } catch (e) {
+                console.warn("Server extraction failed, defaulting to original URL:", e);
             }
-        } catch (e) {
-            console.warn("Server extraction failed, defaulting to original URL:", e);
         }
     }
 
     gameState.mediaUrl = finalUrl;
-    console.log("Setting media URL to:", finalUrl);
+    gameState.isEmbed = isEmbed;
+    console.log("Setting media URL to:", finalUrl, "Embed:", isEmbed);
 
-    if (gameState.gameType === "video-edging" && elements.edgingVideoPlayer) {
-      elements.edgingVideoPlayer.src = finalUrl;
-      elements.edgingVideoPlayer.load();
-      // Test play to verify valid source
-      try {
-          // elements.edgingVideoPlayer.play().then(() => elements.edgingVideoPlayer.pause()).catch(() => {});
-      } catch(e) {}
+    if (gameState.gameType === "video-edging") {
+      if (isEmbed && elements.edgingIframePlayer) {
+          elements.edgingIframePlayer.src = finalUrl;
+          elements.edgingIframePlayer.classList.remove("hidden");
+          elements.edgingVideoPlayer.classList.add("hidden");
+      } else if (elements.edgingVideoPlayer) {
+          elements.edgingVideoPlayer.src = finalUrl;
+          elements.edgingVideoPlayer.classList.remove("hidden");
+          elements.edgingIframePlayer.classList.add("hidden");
+          elements.edgingVideoPlayer.load();
+      }
     } else if (gameState.gameType === "hypno" && elements.hypnoAudioPlayer) {
       elements.hypnoAudioPlayer.src = finalUrl;
     }
