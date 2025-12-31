@@ -955,35 +955,64 @@ function updateSessionTimer() {
 function updateEdgeBarZones() {
   // Add visual zones to the edge bar container
   const container = elements.edgeBarContainer;
-
-  // Remove existing zone markers if any
-  const existingZones = container.querySelectorAll(".edge-zone-marker");
-  existingZones.forEach((marker) => marker.remove());
-
+  
+  // Remove existing zone markers and labels
+  const existingZones = container.querySelectorAll(".edge-zone-marker, .edge-zone-label");
+  existingZones.forEach((el) => el.remove());
+  
+  // Calculate positions (EDGE at 100%, CUM extends beyond)
+  const edgePosition = "100%";
+  const cumPosition = "120%"; // CUM zone extends 20% beyond EDGE
+  
   // Add EDGE zone marker at 100%
   const edgeZoneMarker = document.createElement("div");
   edgeZoneMarker.className = "edge-zone-marker edge-zone";
-  edgeZoneMarker.style.left = "100%";
+  edgeZoneMarker.style.left = edgePosition;
   edgeZoneMarker.style.position = "absolute";
   edgeZoneMarker.style.height = "100%";
-  edgeZoneMarker.style.width = "2px";
+  edgeZoneMarker.style.width = "3px";
   edgeZoneMarker.style.backgroundColor = "#ff6b6b";
   edgeZoneMarker.style.zIndex = "10";
-  edgeZoneMarker.title = "EDGE ZONE";
+  edgeZoneMarker.style.boxShadow = "0 0 10px rgba(255, 107, 107, 0.8)";
   container.style.position = "relative";
   container.appendChild(edgeZoneMarker);
-
-  // Add label for EDGE zone
+  
+  // Add EDGE label at the marker position
   const edgeLabel = document.createElement("div");
   edgeLabel.className = "edge-zone-label";
-  edgeLabel.textContent = "EDGE ZONE";
+  edgeLabel.textContent = "EDGE";
   edgeLabel.style.position = "absolute";
-  edgeLabel.style.right = "0";
-  edgeLabel.style.top = "-20px";
-  edgeLabel.style.fontSize = "0.8em";
-  edgeLabel.style.color = "#ff6b6b";
+  edgeLabel.style.left = edgePosition;
+  edgeLabel.style.transform = "translateX(-50%)";
+  edgeLabel.style.top = "-35px";
+  edgeLabel.style.fontSize = "1.4rem";
+  edgeLabel.style.color = "white";
   edgeLabel.style.fontWeight = "bold";
+  edgeLabel.style.textShadow = "0 0 10px rgba(255, 255, 255, 0.5)";
+  edgeLabel.style.whiteSpace = "nowrap";
   container.appendChild(edgeLabel);
+  
+  // Add CUM! label at the end
+  const cumLabel = document.createElement("div");
+  cumLabel.className = "edge-zone-label";
+  cumLabel.textContent = "CUM!";
+  cumLabel.style.position = "absolute";
+  cumLabel.style.left = cumPosition;
+  cumLabel.style.transform = "translateX(-50%)";
+  cumLabel.style.top = "-35px";
+  cumLabel.style.fontSize = "1.4rem";
+  cumLabel.style.color = "#90ee90";
+  cumLabel.style.fontWeight = "bold";
+  cumLabel.style.textShadow = "0 0 10px rgba(144, 238, 144, 0.8)";
+  cumLabel.style.whiteSpace = "nowrap";
+  container.appendChild(cumLabel);
+  
+  // Show CUM zone when edge level reaches 100%
+  if (gameState.edgeLevel >= 100) {
+    container.classList.add("has-cum-zone");
+  } else {
+    container.classList.remove("has-cum-zone");
+  }
 }
 
 function changeState() {
@@ -1083,6 +1112,9 @@ function updateEdge(amount) {
   );
   elements.edgeBar.style.width = gameState.edgeLevel + "%";
   elements.edgePercentage.textContent = Math.round(gameState.edgeLevel);
+
+  // Update zone display
+  updateEdgeBarZones();
 
   // Broadcast in multiplayer
   if (gameState.gameMode === "multiplayer" && socket) {

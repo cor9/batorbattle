@@ -133,23 +133,23 @@ body {
 }
 
 #game-screen.stroke-state {
-    background-color: #2d5016;
-    animation: pulse-green 2s ease-in-out infinite;
+    background-color: #1a4d1a;
 }
 
 #game-screen.stop-state {
-    background-color: #501616;
-    animation: pulse-red 2s ease-in-out infinite;
+    background-color: #4d1a1a;
 }
 
-@keyframes pulse-green {
-    0%, 100% { background-color: #2d5016; }
-    50% { background-color: #3d7026; }
+#game-screen.warmup-state {
+    background-color: #1a4d1a;
 }
 
-@keyframes pulse-red {
-    0%, 100% { background-color: #501616; }
-    50% { background-color: #702626; }
+#game-screen.cum-state {
+    background-color: #1a4d1a;
+}
+
+#game-screen.denied-state {
+    background-color: #4d1a1a;
 }
 
 #game-content {
@@ -192,58 +192,99 @@ body {
 
 .progress-container {
     width: 90%;
-    max-width: 600px;
-    margin-bottom: 3rem;
+    max-width: 800px;
+    margin: 3rem 0;
+    position: relative;
 }
 
 .progress-label {
-    font-size: 1.2rem;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+    display: none; /* Hide the label, zones are shown on bar */
 }
 
 .edge-bar-container {
     width: 100%;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    overflow: hidden;
+    height: 60px;
+    background: #000;
+    border-radius: 10px;
+    overflow: visible;
     position: relative;
     margin-bottom: 0.5rem;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(255, 255, 255, 0.2);
 }
 
 .edge-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 50%, #ff4757 100%);
-    transition: width 0.5s ease;
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+    background: linear-gradient(90deg, #2d5016 0%, #4a7c2a 50%, #6ba84f 100%);
+    transition: width 0.3s ease;
+    border-radius: 7px;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
-.edge-bar::after {
-    content: '';
+/* EDGE zone marker at 100% */
+.edge-zone-marker {
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    animation: shimmer 2s infinite;
+    height: 100%;
+    width: 3px;
+    background-color: #ff6b6b;
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
 }
 
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+.edge-zone-marker.edge-zone {
+    left: 100%;
+}
+
+/* Zone labels */
+.edge-zone-label {
+    position: absolute;
+    top: -30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+}
+
+.edge-zone-label:first-of-type {
+    left: 0;
+}
+
+.edge-zone-label:last-of-type {
+    right: 0;
+    color: #90ee90;
+}
+
+/* CUM zone indicator - shows when bar reaches 100% */
+.edge-bar-container::after {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 0;
+    width: 20%;
+    height: 100%;
+    background: linear-gradient(90deg, #6ba84f 0%, #90ee90 100%);
+    border-radius: 0 7px 7px 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.edge-bar-container.has-cum-zone::after {
+    opacity: 1;
+}
+
+/* Make sure bar extends into CUM zone when at 100% */
+.edge-bar-container.has-cum-zone .edge-bar {
+    width: 120% !important;
+    background: linear-gradient(90deg, #2d5016 0%, #4a7c2a 50%, #6ba84f 80%, #90ee90 100%);
 }
 
 .progress-percentage {
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-align: center;
+    display: none; /* Hide percentage, zones are visual */
 }
 
 .game-controls {
