@@ -1100,16 +1100,20 @@ function initHypnoSpiral() {
   const ctx = canvas.getContext("2d");
   const styleSelect = document.getElementById("hypno-style");
 
-  // Ensure canvas fits screen
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  // Handle resize
-  window.removeEventListener('resize', canvas.resizeHandler); // Cleanup old
-  canvas.resizeHandler = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+  // Ensure canvas fits container (preserving sidebar layout)
+  const resize = () => {
+      if (elements.hypnoContainer) {
+          canvas.width = elements.hypnoContainer.clientWidth;
+          canvas.height = elements.hypnoContainer.clientHeight;
+      }
   };
+
+  // Initial size
+  resize();
+
+  // Handle window resize
+  window.removeEventListener('resize', canvas.resizeHandler);
+  canvas.resizeHandler = resize;
   window.addEventListener('resize', canvas.resizeHandler);
 
   let rotation = 0;
