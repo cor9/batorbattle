@@ -57,6 +57,8 @@ const gameState = {
   phase: "warmup", // 'warmup', 'playing', 'cumming', 'denied'
   sessionStartTime: null,
   sessionProgress: 0, // 0-1, how far through the session
+  gameType: "redlight", // 'redlight', 'dicedare', 'batecards', 'battleship', 'blitzedout', 'video-edging', 'hypno'
+  mediaUrl: null,
 };
 
 // Instructions pool from gamescreens.md
@@ -163,6 +165,11 @@ const elements = {
   roomDifficultyValue: document.getElementById("room-difficulty-value"),
   roomOrgasmChance: document.getElementById("room-orgasm-chance"),
   roomOrgasmChanceValue: document.getElementById("room-orgasm-chance-value"),
+  roomGameType: document.getElementById("room-game-type"),
+  mediaInputGroup: document.getElementById("media-input-group"),
+  mediaUrl: document.getElementById("media-url"),
+  mediaFile: document.getElementById("media-file"),
+  loadMediaBtn: document.getElementById("load-media-btn"),
   webcamRequired: document.getElementById("webcam-required"),
   spectatorsAllowed: document.getElementById("spectators-allowed"),
 
@@ -182,6 +189,17 @@ const elements = {
   edgeBar: document.getElementById("edge-bar"),
   edgePercentage: document.getElementById("edge-percentage"),
   timerDisplay: document.getElementById("timer-display"),
+  progressContainer: document.getElementById("progress-container"),
+  externalGameContainer: document.getElementById("external-game-container"),
+  externalGameFrame: document.getElementById("external-game-frame"),
+  videoEdgingContainer: document.getElementById("video-edging-container"),
+  edgingVideoPlayer: document.getElementById("edging-video-player"),
+  hypnoContainer: document.getElementById("hypno-container"),
+  hypnoSpiral: document.getElementById("hypno-spiral"),
+  hypnoAudioPlayer: document.getElementById("hypno-audio-player"),
+  hypnoPlayPause: document.getElementById("hypno-play-pause"),
+  hypnoSpeed: document.getElementById("hypno-speed"),
+  hypnoSpeedValue: document.getElementById("hypno-speed-value"),
   pauseBtn: document.getElementById("pause-btn"),
   failedBtn: document.getElementById("failed-btn"),
   endGameBtn: document.getElementById("end-game-btn"),
@@ -260,6 +278,29 @@ function setupEventListeners() {
     if (gameState.isHost && socket) {
       gameState.room.settings.orgasmChance = value;
       socket.emit("gameStateUpdate", { settings: gameState.room.settings });
+    }
+  });
+  elements.roomGameType.addEventListener("change", (e) => {
+    const gameType = e.target.value;
+    gameState.gameType = gameType;
+    // Show/hide media input for video-edging and hypno
+    if (gameType === "video-edging" || gameType === "hypno") {
+      elements.mediaInputGroup.style.display = "block";
+    } else {
+      elements.mediaInputGroup.style.display = "none";
+    }
+    if (gameState.isHost && socket) {
+      gameState.room.settings.gameType = gameType;
+      socket.emit("gameStateUpdate", { settings: gameState.room.settings });
+    }
+  });
+  elements.loadMediaBtn.addEventListener("click", loadMedia);
+  elements.mediaFile.addEventListener("change", (e) => {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const url = URL.createObjectURL(file);
+      gameState.mediaUrl = url;
+      elements.mediaUrl.value = url;
     }
   });
 
@@ -848,9 +889,47 @@ function startGame() {
   gameState.isStroking = false;
   gameState.phase = "warmup";
 
+  // Get game type from room settings or default
+  const gameType = gameState.gameMode === "multiplayer" 
+    ? (gameState.room.settings.gameType || "redlight")
+    : "redlight";
+  gameState.gameType = gameType;
+
   showScreen("game-screen");
   elements.endOverlay.classList.add("hidden");
   elements.rankingsContainer.classList.add("hidden");
+
+  // Hide all game containers initially
+  elements.progressContainer?.classList.add("hidden");
+  elements.externalGameContainer?.classList.add("hidden");
+  elements.videoEdgingContainer?.classList.add("hidden");
+  elements.hypnoContainer?.classList.add("hidden");
+
+  // Show appropriate game type
+  switch(gameType) {
+    case "redlight":
+      elements.progressContainer?.classList.remove("hidden");
+      startRedLightGame();
+      break;
+    case "dicedare":
+      loadExternalGame("https://dicedare.batecards.online/");
+      break;
+    case "batecards":
+      loadExternalGame("https://batecards.online/");
+      break;
+    case "battleship":
+      loadExternalGame("http://en.battleship-game.org/id85226959");
+      break;
+    case "blitzedout":
+      loadExternalGame("https://blitzedout.com/");
+      break;
+    case "video-edging":
+      loadVideoEdging();
+      break;
+    case "hypno":
+      loadHypnoExperience();
+      break;
+  }
 
   // Hide video grid in solo mode
   if (gameState.gameMode === "solo") {
@@ -858,7 +937,9 @@ function startGame() {
   } else {
     elements.videoGrid.style.display = "grid";
   }
+}
 
+function startRedLightGame() {
   // Calculate session end time
   const sessionLength =
     gameState.gameMode === "multiplayer"
@@ -874,6 +955,149 @@ function startGame() {
 
   // Start with warm-up phase
   startWarmupPhase();
+}
+
+function loadExternalGame(url) {
+  if (!elements.externalGameContainer || !elements.externalGameFrame) return;
+  
+  elements.externalGameContainer.classList.remove("hidden");
+  elements.externalGameFrame.src = url;
+  elements.externalGameFrame.style.width = "100%";
+  elements.externalGameFrame.style.height = "80vh";
+  elements.externalGameFrame.style.border = "none";
+  
+  // Try to enter fullscreen
+  tryEnterFullscreen();
+}
+
+function loadVideoEdging() {
+  if (!elements.videoEdgingContainer || !elements.edgingVideoPlayer) return;
+  
+  elements.videoEdgingContainer.classList.remove("hidden");
+  
+  if (gameState.mediaUrl) {
+    elements.edgingVideoPlayer.src = gameState.mediaUrl;
+    elements.edgingVideoPlayer.play().catch(err => console.error("Video play error:", err));
+  } else {
+    elements.instruction.textContent = "Please load a video URL or file first";
+  }
+  
+  // Try to enter fullscreen
+  tryEnterFullscreen();
+}
+
+function loadHypnoExperience() {
+  if (!elements.hypnoContainer || !elements.hypnoSpiral || !elements.hypnoAudioPlayer) return;
+  
+  elements.hypnoContainer.classList.remove("hidden");
+  
+  // Initialize hypno spiral
+  initHypnoSpiral();
+  
+  if (gameState.mediaUrl) {
+    elements.hypnoAudioPlayer.src = gameState.mediaUrl;
+    elements.hypnoAudioPlayer.play().catch(err => console.error("Audio play error:", err));
+  } else {
+    elements.instruction.textContent = "Please load an audio URL or file first";
+  }
+  
+  // Try to enter fullscreen
+  tryEnterFullscreen();
+}
+
+function loadMedia() {
+  const url = elements.mediaUrl?.value.trim();
+  if (url) {
+    gameState.mediaUrl = url;
+    if (gameState.gameType === "video-edging" && elements.edgingVideoPlayer) {
+      elements.edgingVideoPlayer.src = url;
+    } else if (gameState.gameType === "hypno" && elements.hypnoAudioPlayer) {
+      elements.hypnoAudioPlayer.src = url;
+    }
+  }
+}
+
+function initHypnoSpiral() {
+  const canvas = elements.hypnoSpiral;
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  let rotation = 0;
+  let animationId;
+  
+  function drawSpiral() {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadius = Math.min(canvas.width, canvas.height) / 2;
+    
+    const speed = parseFloat(elements.hypnoSpeed?.value || 1);
+    rotation += 0.02 * speed;
+    
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    for (let i = 0; i < 1000; i++) {
+      const angle = i * 0.1 + rotation;
+      const radius = (i / 1000) * maxRadius;
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+      
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    
+    ctx.stroke();
+    
+    // Add pulsing effect
+    const pulse = Math.sin(Date.now() / 500) * 0.3 + 0.7;
+    ctx.globalAlpha = pulse;
+    
+    animationId = requestAnimationFrame(drawSpiral);
+  }
+  
+  drawSpiral();
+  
+  // Store animation ID for cleanup
+  canvas.animationId = animationId;
+  
+  // Handle speed changes
+  if (elements.hypnoSpeed) {
+    elements.hypnoSpeed.addEventListener("input", (e) => {
+      const speed = parseFloat(e.target.value);
+      if (elements.hypnoSpeedValue) {
+        elements.hypnoSpeedValue.textContent = speed.toFixed(1) + "x";
+      }
+    });
+  }
+  
+  // Handle play/pause
+  if (elements.hypnoPlayPause && elements.hypnoAudioPlayer) {
+    elements.hypnoPlayPause.addEventListener("click", () => {
+      if (elements.hypnoAudioPlayer.paused) {
+        elements.hypnoAudioPlayer.play();
+        elements.hypnoPlayPause.textContent = "Pause";
+      } else {
+        elements.hypnoAudioPlayer.pause();
+        elements.hypnoPlayPause.textContent = "Play";
+      }
+    });
+  }
+  
+  // Handle window resize
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
 }
 
 function tryEnterFullscreen() {
@@ -955,15 +1179,17 @@ function updateSessionTimer() {
 function updateEdgeBarZones() {
   // Add visual zones to the edge bar container
   const container = elements.edgeBarContainer;
-  
+
   // Remove existing zone markers and labels
-  const existingZones = container.querySelectorAll(".edge-zone-marker, .edge-zone-label");
+  const existingZones = container.querySelectorAll(
+    ".edge-zone-marker, .edge-zone-label"
+  );
   existingZones.forEach((el) => el.remove());
-  
+
   // Calculate positions (EDGE at 100%, CUM extends beyond)
   const edgePosition = "100%";
   const cumPosition = "120%"; // CUM zone extends 20% beyond EDGE
-  
+
   // Add EDGE zone marker at 100%
   const edgeZoneMarker = document.createElement("div");
   edgeZoneMarker.className = "edge-zone-marker edge-zone";
@@ -976,7 +1202,7 @@ function updateEdgeBarZones() {
   edgeZoneMarker.style.boxShadow = "0 0 10px rgba(255, 107, 107, 0.8)";
   container.style.position = "relative";
   container.appendChild(edgeZoneMarker);
-  
+
   // Add EDGE label at the marker position
   const edgeLabel = document.createElement("div");
   edgeLabel.className = "edge-zone-label";
@@ -991,7 +1217,7 @@ function updateEdgeBarZones() {
   edgeLabel.style.textShadow = "0 0 10px rgba(255, 255, 255, 0.5)";
   edgeLabel.style.whiteSpace = "nowrap";
   container.appendChild(edgeLabel);
-  
+
   // Add CUM! label at the end
   const cumLabel = document.createElement("div");
   cumLabel.className = "edge-zone-label";
@@ -1006,7 +1232,7 @@ function updateEdgeBarZones() {
   cumLabel.style.textShadow = "0 0 10px rgba(144, 238, 144, 0.8)";
   cumLabel.style.whiteSpace = "nowrap";
   container.appendChild(cumLabel);
-  
+
   // Show CUM zone when edge level reaches 100%
   if (gameState.edgeLevel >= 100) {
     container.classList.add("has-cum-zone");
