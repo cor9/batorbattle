@@ -1717,27 +1717,31 @@ function changeState() {
   }
 
   // Session Pacing Logic
-  // The user complained that a 15 min session only had 2 prompts.
-  // This likely means prompts were way too long or the session timer logic is broken.
-  // Ensure "speedMultiplier" doesn't make things too fast, but we also need to ensure
-  // "baseTime" isn't excessively long for short sessions, or excessively short for long ones?
-  // Actually, usually the issue is Prompts being too long for a Short session, BUT user said
-  // "15 minute session, only 2 prompts". This implies prompts lasted 7+ minutes each?!
-  //
-  // Looking at the code:
-  // strokeMin: 10000 (10s), strokeMax: 30000 (30s) -> 10-30 seconds.
-  // This shouldn't result in 7 minute prompts.
-  //
-  // POTENTIAL BUG: `speedMultiplier` calculation might be weird if sessionProgress is broken?
-  // OR `baseDuration` in instructions map is customized to be super long?
-  //
-  // Let's cap the maximum duration to ensure variety.
-  // Regardless of Difficulty, let's limit generic strokes to 45 seconds max.
-  duration = Math.min(duration, 45000);
+  // Clamp duration to ensure we get plenty of prompts
+  // Max 30 seconds per stroke normally
+  duration = Math.min(duration, 30000);
 
-  // Apply speed multiplier to ALL durations (even explicit ones) to escalate intensity
+  // Apply speed multiplier
+  if (gameState.sessionProgress >= 0.75) {
+      // Last 25% of game gets faster
+      speedMultiplier = 1.5 + (gameState.sessionProgress - 0.75) * 4; // 1.5x up to 2.5x
+      console.log(`[BATOR-DEBUG] Speed multiplier active: ${speedMultiplier.toFixed(2)}x`);
+  }
+
   duration = Math.max(1000, duration / speedMultiplier);
   duration = Math.round(duration);
+
+  console.log(`[BATOR-DEBUG] State: ${gameState.isStroking ? 'STROKE' : 'STOP'}, Duration: ${duration}ms, Progress: ${(gameState.sessionProgress*100).toFixed(1)}%`);
+
+  elements.instruction.textContent = text;
+  gameState.instruction = text;
+  gameState.nextActionTime = Date.now() + duration;
+
+  // Speak instruction
+  // speak(text); // Re-enable if we want text-to-speech
+
+  // Set timeout for next state
+  gameState.actionTimeout = setTimeout(changeState, duration);
 
   // RESET BAR: User wants it to "restart for every new instruction"
   // This turns the bar into a duration timer for the specific instruction
