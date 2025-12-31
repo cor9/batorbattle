@@ -99,16 +99,17 @@
           <div class="setting-group">
             <label for="room-session-length">
               Session Length:
-              <span id="room-session-length-value">30</span> minutes
             </label>
-            <input
-              type="range"
-              id="room-session-length"
-              min="5"
-              max="60"
-              value="30"
-              step="5"
-            />
+            <select id="room-session-length">
+              <option value="5">5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="20">20 minutes</option>
+              <option value="25">25 minutes</option>
+              <option value="30" selected>30 minutes</option>
+              <option value="35">35 minutes</option>
+            </select>
+            <span id="room-session-length-value" style="display: none;"></span>
           </div>
           <div class="setting-group">
             <label for="room-difficulty">
@@ -178,16 +179,18 @@
 
         <div class="setting-group">
           <label for="session-length">
-            Session Length: <span id="session-length-value">30</span> minutes
+            Session Length:
           </label>
-          <input
-            type="range"
-            id="session-length"
-            min="5"
-            max="60"
-            value="30"
-            step="5"
-          />
+          <select id="session-length">
+            <option value="5">5 minutes</option>
+            <option value="10">10 minutes</option>
+            <option value="15">15 minutes</option>
+            <option value="20">20 minutes</option>
+            <option value="25">25 minutes</option>
+            <option value="30" selected>30 minutes</option>
+            <option value="35">35 minutes</option>
+          </select>
+          <span id="session-length-value" style="display: none;"></span>
         </div>
 
         <div class="setting-group">

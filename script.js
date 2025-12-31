@@ -238,9 +238,8 @@ function setupEventListeners() {
   // Room waiting
   elements.startBattleBtn.addEventListener("click", startBattle);
   elements.leaveRoomBtn.addEventListener("click", leaveRoom);
-  elements.roomSessionLength.addEventListener("input", (e) => {
+  elements.roomSessionLength.addEventListener("change", (e) => {
     const value = parseInt(e.target.value);
-    elements.roomSessionLengthValue.textContent = value;
     if (gameState.isHost && socket) {
       gameState.room.settings.sessionLength = value;
       socket.emit("gameStateUpdate", { settings: gameState.room.settings });
@@ -271,9 +270,8 @@ function setupEventListeners() {
   elements.startGameBtn.addEventListener("click", () => {
     startGame();
   });
-  elements.sessionLength.addEventListener("input", (e) => {
+  elements.sessionLength.addEventListener("change", (e) => {
     gameState.settings.sessionLength = parseInt(e.target.value);
-    elements.sessionLengthValue.textContent = e.target.value;
   });
   elements.difficulty.addEventListener("input", (e) => {
     const diff = parseInt(e.target.value);
@@ -345,7 +343,7 @@ function showScreen(screenId) {
 
 // Settings Display
 function updateSettingsDisplay() {
-  elements.sessionLengthValue.textContent = gameState.settings.sessionLength;
+  elements.sessionLength.value = gameState.settings.sessionLength;
   elements.orgasmChanceValue.textContent = gameState.settings.orgasmChance;
   const labels = ["Easy", "Medium", "Hard"];
   elements.difficultyValue.textContent =
@@ -748,8 +746,6 @@ function updateRoomDisplay() {
   // Update settings display
   if (gameState.room.settings.sessionLength) {
     elements.roomSessionLength.value = gameState.room.settings.sessionLength;
-    elements.roomSessionLengthValue.textContent =
-      gameState.room.settings.sessionLength;
   }
   if (gameState.room.settings.difficulty) {
     elements.roomDifficulty.value = gameState.room.settings.difficulty;
@@ -890,20 +886,21 @@ function tryEnterFullscreen() {
 function startWarmupPhase() {
   gameState.phase = "warmup";
   gameState.isStroking = false;
-  
+
   // Show warm-up instructions
-  const warmupMessage = "This is the warm-up round. Start jerking off and try to get to the edge when the bar gets to 100% of the EDGE zone.\n\nYou should be ready to cum when the bar reaches the CUM zone.\n\nTry to get as close as possible, it will make the rest of the game even more fun!";
-  
+  const warmupMessage =
+    "This is the warm-up round. Start jerking off and try to get to the edge when the bar gets to 100% of the EDGE zone.\n\nYou should be ready to cum when the bar reaches the CUM zone.\n\nTry to get as close as possible, it will make the rest of the game even more fun!";
+
   elements.instruction.textContent = warmupMessage;
   elements.instruction.style.fontSize = "1.2em";
   elements.instruction.style.lineHeight = "1.6";
   elements.instruction.style.textAlign = "center";
   elements.instruction.style.padding = "20px";
   elements.gameScreen.className = "screen active warmup-state";
-  
+
   // Update edge bar to show zones
   updateEdgeBarZones();
-  
+
   // After 10 seconds, start the actual game
   setTimeout(() => {
     gameState.phase = "playing";
@@ -911,14 +908,14 @@ function startWarmupPhase() {
     elements.instruction.style.lineHeight = "";
     elements.instruction.style.textAlign = "";
     elements.instruction.style.padding = "";
-    
+
     // Start first state change
     if (gameState.gameMode === "solo") {
       changeState();
     } else if (gameState.isHost) {
       changeState();
     }
-    
+
     // Try to enter fullscreen
     tryEnterFullscreen();
   }, 10000);
@@ -950,7 +947,7 @@ function updateSessionTimer() {
     2,
     "0"
   )}:${String(seconds).padStart(2, "0")}`;
-  
+
   // Update edge bar zones display
   updateEdgeBarZones();
 }
@@ -958,39 +955,44 @@ function updateSessionTimer() {
 function updateEdgeBarZones() {
   // Add visual zones to the edge bar container
   const container = elements.edgeBarContainer;
-  
+
   // Remove existing zone markers if any
-  const existingZones = container.querySelectorAll('.edge-zone-marker');
-  existingZones.forEach(marker => marker.remove());
-  
+  const existingZones = container.querySelectorAll(".edge-zone-marker");
+  existingZones.forEach((marker) => marker.remove());
+
   // Add EDGE zone marker at 100%
-  const edgeZoneMarker = document.createElement('div');
-  edgeZoneMarker.className = 'edge-zone-marker edge-zone';
-  edgeZoneMarker.style.left = '100%';
-  edgeZoneMarker.style.position = 'absolute';
-  edgeZoneMarker.style.height = '100%';
-  edgeZoneMarker.style.width = '2px';
-  edgeZoneMarker.style.backgroundColor = '#ff6b6b';
-  edgeZoneMarker.style.zIndex = '10';
-  edgeZoneMarker.title = 'EDGE ZONE';
-  container.style.position = 'relative';
+  const edgeZoneMarker = document.createElement("div");
+  edgeZoneMarker.className = "edge-zone-marker edge-zone";
+  edgeZoneMarker.style.left = "100%";
+  edgeZoneMarker.style.position = "absolute";
+  edgeZoneMarker.style.height = "100%";
+  edgeZoneMarker.style.width = "2px";
+  edgeZoneMarker.style.backgroundColor = "#ff6b6b";
+  edgeZoneMarker.style.zIndex = "10";
+  edgeZoneMarker.title = "EDGE ZONE";
+  container.style.position = "relative";
   container.appendChild(edgeZoneMarker);
-  
+
   // Add label for EDGE zone
-  const edgeLabel = document.createElement('div');
-  edgeLabel.className = 'edge-zone-label';
-  edgeLabel.textContent = 'EDGE ZONE';
-  edgeLabel.style.position = 'absolute';
-  edgeLabel.style.right = '0';
-  edgeLabel.style.top = '-20px';
-  edgeLabel.style.fontSize = '0.8em';
-  edgeLabel.style.color = '#ff6b6b';
-  edgeLabel.style.fontWeight = 'bold';
+  const edgeLabel = document.createElement("div");
+  edgeLabel.className = "edge-zone-label";
+  edgeLabel.textContent = "EDGE ZONE";
+  edgeLabel.style.position = "absolute";
+  edgeLabel.style.right = "0";
+  edgeLabel.style.top = "-20px";
+  edgeLabel.style.fontSize = "0.8em";
+  edgeLabel.style.color = "#ff6b6b";
+  edgeLabel.style.fontWeight = "bold";
   container.appendChild(edgeLabel);
 }
 
 function changeState() {
-  if (!gameState.isPlaying || gameState.isPaused || gameState.phase === "warmup") return;
+  if (
+    !gameState.isPlaying ||
+    gameState.isPaused ||
+    gameState.phase === "warmup"
+  )
+    return;
 
   gameState.isStroking = !gameState.isStroking;
   const settings =
@@ -1005,7 +1007,7 @@ function changeState() {
   if (gameState.sessionProgress >= 0.75) {
     // In last quarter, speed up: 0.75 = 1x, 1.0 = 3x
     const lastQuarterProgress = (gameState.sessionProgress - 0.75) / 0.25;
-    speedMultiplier = 1 + (lastQuarterProgress * 2); // 1x to 3x speed
+    speedMultiplier = 1 + lastQuarterProgress * 2; // 1x to 3x speed
   }
 
   if (gameState.isStroking) {
@@ -1023,7 +1025,10 @@ function changeState() {
       diff.strokeMin + Math.random() * (diff.strokeMax - diff.strokeMin);
     const escalationFactor = 1 - gameState.edgeLevel / 200;
     // Apply speed multiplier - faster in last quarter
-    const nextTime = Math.max(2000, (baseTime * escalationFactor) / speedMultiplier);
+    const nextTime = Math.max(
+      2000,
+      (baseTime * escalationFactor) / speedMultiplier
+    );
 
     gameState.timer = setTimeout(changeState, nextTime);
 
@@ -1104,24 +1109,24 @@ function handleEdgeReached() {
 
   if (allowOrgasm) {
     gameState.phase = "cumming";
-    const cumMessage = instructions.cum[
-      Math.floor(Math.random() * instructions.cum.length)
-    ];
+    const cumMessage =
+      instructions.cum[Math.floor(Math.random() * instructions.cum.length)];
     elements.instruction.textContent = cumMessage;
     elements.gameScreen.className = "screen active cum-state";
-    
+
     // Give 10 seconds to cum
     setTimeout(() => {
       endGame(true, "Hope you enjoyed that release!");
     }, 10000);
   } else {
     gameState.phase = "denied";
-    const deniedMessage = instructions.denied[
-      Math.floor(Math.random() * instructions.denied.length)
-    ];
+    const deniedMessage =
+      instructions.denied[
+        Math.floor(Math.random() * instructions.denied.length)
+      ];
     elements.instruction.textContent = deniedMessage;
     elements.gameScreen.className = "screen active denied-state";
-    
+
     // Reset after showing denial message
     setTimeout(() => {
       gameState.phase = "playing";
