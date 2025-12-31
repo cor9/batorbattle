@@ -1299,7 +1299,9 @@ function changeState() {
   )
     return;
 
+  // Calculate 'next' state before determining duration to pick correct instruction pool
   gameState.isStroking = !gameState.isStroking;
+
   const settings =
     gameState.gameMode === "multiplayer"
       ? gameState.room.settings
@@ -1313,23 +1315,42 @@ function changeState() {
     speedMultiplier = 1 + lastQuarterProgress * 2; // 1x to 3x speed
   }
 
-  // Calculate duration first so we can animate the bar layout
-  let duration;
-  if (gameState.isStroking) {
-    const baseTime =
-      diff.strokeMin + Math.random() * (diff.strokeMax - diff.strokeMin);
-    const escalationFactor = 1 - gameState.edgeLevel / 200; // Shorter strokes as we get edgier? Actually standard logic
-    duration = Math.max(
-      2000,
-      (baseTime * escalationFactor) / speedMultiplier
-    );
+  // Select instruction set based on state
+  const instructionSet = gameState.isStroking
+    ? instructions.stroke
+    : instructions.stop;
+  const selection =
+    instructionSet[Math.floor(Math.random() * instructionSet.length)];
+
+  let text = "";
+  let baseDuration = 0;
+
+  // Handle new array format [Text, Duration, Difficulty]
+  if (Array.isArray(selection)) {
+    text = selection[0];
+    if (selection[1]) baseDuration = selection[1] * 1000;
   } else {
-    const baseTime =
-      diff.stopMin + Math.random() * (diff.stopMax - diff.stopMin);
-    duration = Math.max(1500, baseTime / speedMultiplier);
+    text = selection;
   }
 
-  // Ensure duration is integer
+  // Calculate duration
+  let duration = baseDuration;
+  if (!duration) {
+    // Fallback if no explicit duration provided
+    if (gameState.isStroking) {
+      const baseTime =
+        diff.strokeMin + Math.random() * (diff.strokeMax - diff.strokeMin);
+      const escalationFactor = 1 - gameState.edgeLevel / 200;
+      duration = Math.max(2000, baseTime * escalationFactor);
+    } else {
+      const baseTime =
+        diff.stopMin + Math.random() * (diff.stopMax - diff.stopMin);
+      duration = Math.max(1500, baseTime);
+    }
+  }
+
+  // Apply speed multiplier to ALL durations (even explicit ones) to escalate intensity
+  duration = Math.max(1000, duration / speedMultiplier);
   duration = Math.round(duration);
 
   // Apply transition to bar
@@ -1337,31 +1358,20 @@ function changeState() {
 
   if (gameState.isStroking) {
     elements.gameScreen.className = "screen active stroke-state";
-    const randomInstruction =
-      instructions.stroke[Math.floor(Math.random() * instructions.stroke.length)];
-    elements.instruction.textContent = randomInstruction;
+    elements.instruction.innerHTML = text; // innerHTML allows <br> tags
 
     if (gameState.settings.soundEnabled) {
       playSound("stroke");
     }
 
     // "Get to the edge everytime" logic
-    // Target a high level, effectively pacing the user to the edge
-    // Base target 90-98%
     let targetLevel = 90 + Math.random() * 9;
 
-    // Check if we should actually trigger "Edge Reached" (Orgasm/Denial chance)
-    // We only check for 100% if the roll allows
-    // But since "handleEdgeReached" handles the probability of Cum vs Denied,
-    // we just decide here IF we want to hit 100%.
-    // Let's make hitting 100% happen occasionally to allow the game to end/deny.
-    // Random chance to push to 100% based on difficulty?
-    // Or just simple: 10% chance to test the edge fully
+    // Occasional 100% push
     if (Math.random() < 0.15) {
         targetLevel = 100;
     }
 
-    // Update state
     gameState.edgeLevel = targetLevel;
 
     // Animate Visuals
@@ -1373,7 +1383,7 @@ function changeState() {
     if (gameState.gameMode === "multiplayer" && socket && gameState.isHost) {
         socket.emit("gameStateUpdate", {
             isStroking: gameState.isStroking,
-            instruction: elements.instruction.textContent,
+            instruction: text,
         });
         socket.emit("playerUpdate", {
             edgeLevel: gameState.edgeLevel,
@@ -1383,7 +1393,6 @@ function changeState() {
 
     // Next Step
     if (targetLevel >= 100) {
-        // At the end of the duration, trigger edge reached
         gameState.timer = setTimeout(handleEdgeReached, duration);
     } else {
         gameState.timer = setTimeout(changeState, duration);
@@ -1391,22 +1400,17 @@ function changeState() {
 
   } else {
     elements.gameScreen.className = "screen active stop-state";
-    const randomInstruction =
-      instructions.stop[Math.floor(Math.random() * instructions.stop.length)];
-    elements.instruction.textContent = randomInstruction;
+    elements.instruction.innerHTML = text;
 
     if (gameState.settings.soundEnabled) {
       playSound("stop");
     }
 
-    // Drop down significantly
     const dropAmount = 20 + Math.random() * 20;
     let targetLevel = Math.max(0, gameState.edgeLevel - dropAmount);
 
-    // Update state
     gameState.edgeLevel = targetLevel;
 
-    // Animate Visuals
     elements.edgeBar.style.width = targetLevel + "%";
     elements.edgePercentage.textContent = Math.round(targetLevel);
     updateEdgeBarZones();
@@ -1414,7 +1418,7 @@ function changeState() {
     if (gameState.gameMode === "multiplayer" && socket && gameState.isHost) {
         socket.emit("gameStateUpdate", {
             isStroking: gameState.isStroking,
-            instruction: elements.instruction.textContent,
+            instruction: text,
         });
         socket.emit("playerUpdate", {
             edgeLevel: gameState.edgeLevel,
@@ -1464,14 +1468,18 @@ function handleEdgeReached() {
 
   if (allowOrgasm) {
     gameState.phase = "cumming";
+    // Using simple string array now
     const cumMessage =
       instructions.cum[Math.floor(Math.random() * instructions.cum.length)];
-    elements.instruction.textContent = cumMessage;
+    elements.instruction.innerHTML = cumMessage;
     elements.gameScreen.className = "screen active cum-state";
 
-    // Give 10 seconds to cum
+    // Give 10 seconds to cum (matching the instruction "You have 10 seconds to cum")
     setTimeout(() => {
-      endGame(true, "Hope you enjoyed that release!");
+      const postCumMessage = instructions.postCum
+        ? instructions.postCum[Math.floor(Math.random() * instructions.postCum.length)]
+        : "Game Over";
+      endGame(true, postCumMessage);
     }, 10000);
   } else {
     gameState.phase = "denied";
@@ -1479,7 +1487,7 @@ function handleEdgeReached() {
       instructions.denied[
         Math.floor(Math.random() * instructions.denied.length)
       ];
-    elements.instruction.textContent = deniedMessage;
+    elements.instruction.innerHTML = deniedMessage;
     elements.gameScreen.className = "screen active denied-state";
 
     // Reset after showing denial message
