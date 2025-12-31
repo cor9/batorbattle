@@ -185,23 +185,32 @@ io.on('connection', (socket) => {
   });
 
   // Game control events
-  socket.on('startGame', () => {
+  socket.on('startGame', (data = {}) => {
     if (!socket.roomName) return;
 
     const room = rooms.get(socket.roomName);
     if (!room || room.host !== socket.id) return; // Only host can start
 
-    // Initialize game state
-    room.gameState = {
-      isPlaying: true,
-      isPaused: false,
-      isStroking: false,
-      instruction: '',
-      round: 1,
-      startTime: Date.now(),
-    };
+    // Initialize game state (only for edging game)
+    const gameType = data.gameType || 'redlight';
+    if (gameType === 'redlight') {
+      room.gameState = {
+        isPlaying: true,
+        isPaused: false,
+        isStroking: false,
+        instruction: '',
+        round: 1,
+        startTime: Date.now(),
+      };
+    } else {
+      // For other game types, just mark as playing
+      room.gameState = {
+        isPlaying: true,
+        gameType: gameType,
+      };
+    }
 
-    io.to(socket.roomName).emit('gameStart', room.gameState);
+    io.to(socket.roomName).emit('gameStart', { ...room.gameState, gameType: gameType });
   });
 
   socket.on('gameStateUpdate', (state) => {

@@ -294,7 +294,7 @@ function setupEventListeners() {
   elements.roomGameType.addEventListener("change", (e) => {
     const gameType = e.target.value;
     gameState.gameType = gameType;
-    
+
     // Show/hide edging settings (only for redlight game)
     const edgingSettingsGroup = document.getElementById("edging-settings-group");
     if (edgingSettingsGroup) {
@@ -304,14 +304,14 @@ function setupEventListeners() {
         edgingSettingsGroup.style.display = "none";
       }
     }
-    
+
     // Show/hide media input for video-edging and hypno
     if (gameType === "video-edging" || gameType === "hypno") {
       elements.mediaInputGroup.style.display = "block";
     } else {
       elements.mediaInputGroup.style.display = "none";
     }
-    
+
     if (gameState.isHost && socket) {
       gameState.room.settings.gameType = gameType;
       socket.emit("gameStateUpdate", { settings: gameState.room.settings });
@@ -515,6 +515,13 @@ async function connectSocket() {
 
   socket.on("gameStart", (state) => {
     gameState.isPlaying = true;
+    // Update game type from server if provided
+    if (state.gameType) {
+      gameState.gameType = state.gameType;
+      if (gameState.room) {
+        gameState.room.settings.gameType = state.gameType;
+      }
+    }
     showScreen("game-screen");
     startGame();
   });
@@ -777,14 +784,14 @@ function updateRoomDisplay() {
       edgingSettingsGroup.style.display = "none";
     }
   }
-  
+
   // Show/hide media input based on game type
   if (gameType === "video-edging" || gameType === "hypno") {
     elements.mediaInputGroup.style.display = "block";
   } else {
     elements.mediaInputGroup.style.display = "none";
   }
-  
+
   // Update game type selector
   if (gameState.room.settings.gameType) {
     elements.roomGameType.value = gameState.room.settings.gameType;
@@ -824,7 +831,14 @@ function updateRoomDisplay() {
 
   // Enable/disable start button
   if (gameState.isHost) {
-    elements.startBattleBtn.disabled = playerCount < 2;
+    const gameType = gameState.room.settings.gameType || "redlight";
+    // Only require 2 players for edging game
+    if (gameType === "redlight") {
+      elements.startBattleBtn.disabled = playerCount < 2;
+    } else {
+      // Other games can start with 1+ players
+      elements.startBattleBtn.disabled = playerCount < 1;
+    }
   } else {
     elements.startBattleBtn.style.display = "none";
   }
@@ -872,22 +886,40 @@ function startBattle() {
     return;
   }
 
+  const gameType = elements.roomGameType?.value || "redlight";
   const playerCount = gameState.room?.players?.length || 0;
-  if (playerCount < 2) {
+  
+  // For edging game, require at least 2 players
+  if (gameType === "redlight" && playerCount < 2) {
     console.error("Cannot start battle: Need at least 2 players");
     alert("You need at least 2 players to start a battle");
     return;
   }
 
+  // Build settings object
   const settings = {
-    sessionLength: parseInt(elements.roomSessionLength.value) || 30,
-    difficulty: parseInt(elements.roomDifficulty.value) || 2,
-    orgasmChance: parseInt(elements.roomOrgasmChance.value) || 50,
+    gameType: gameType,
   };
 
-  gameState.room.settings = settings;
+  // Only add edging-specific settings if it's the edging game
+  if (gameType === "redlight") {
+    settings.sessionLength = parseInt(elements.roomSessionLength.value) || 30;
+    settings.difficulty = parseInt(elements.roomDifficulty.value) || 2;
+    settings.orgasmChance = parseInt(elements.roomOrgasmChance.value) || 50;
+  }
+
+  // Save media URL if set (for video-edging or hypno)
+  if (gameType === "video-edging" || gameType === "hypno") {
+    if (gameState.mediaUrl) {
+      settings.mediaUrl = gameState.mediaUrl;
+    }
+  }
+
+  gameState.room.settings = { ...gameState.room.settings, ...settings };
+  gameState.gameType = gameType;
+  
   console.log("Emitting startGame with settings:", settings);
-  socket.emit("startGame");
+  socket.emit("startGame", { gameType: gameType });
 }
 
 // Chat Functions
