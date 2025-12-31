@@ -1143,7 +1143,10 @@ function loadHypnoExperience() {
 
 async function loadMedia() {
   const url = elements.mediaUrl?.value.trim();
-  if (!url) return;
+  if (!url) {
+      alert("Please enter a URL first.");
+      return;
+  }
 
   elements.loadMediaBtn.textContent = "Loading...";
   elements.loadMediaBtn.disabled = true;
@@ -1154,24 +1157,35 @@ async function loadMedia() {
     // Check for both video and audio extensions
     const isDirectFile = /\.(mp4|webm|ogg|mov|mp3|wav|m4a|aac)$/i.test(url);
 
+    // If it's NOT a direct file and starts with http, try to extract
     if (!isDirectFile && url.startsWith('http')) {
         try {
+            console.log("Attempting to extract video from:", url);
             const res = await fetch(`${API_URL}/api/extract-video?url=${encodeURIComponent(url)}`);
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
             const data = await res.json();
             if (data.videoUrl) {
                 finalUrl = data.videoUrl;
                 console.log("Extracted media URL:", finalUrl);
+            } else {
+                console.warn("No videoUrl found in response, using original URL.");
             }
         } catch (e) {
-            console.warn("Server extraction failed, using original URL:", e);
+            console.warn("Server extraction failed, defaulting to original URL:", e);
         }
     }
 
     gameState.mediaUrl = finalUrl;
+    console.log("Setting media URL to:", finalUrl);
 
     if (gameState.gameType === "video-edging" && elements.edgingVideoPlayer) {
       elements.edgingVideoPlayer.src = finalUrl;
       elements.edgingVideoPlayer.load();
+      // Test play to verify valid source
+      try {
+          // elements.edgingVideoPlayer.play().then(() => elements.edgingVideoPlayer.pause()).catch(() => {});
+      } catch(e) {}
     } else if (gameState.gameType === "hypno" && elements.hypnoAudioPlayer) {
       elements.hypnoAudioPlayer.src = finalUrl;
     }
@@ -1179,14 +1193,17 @@ async function loadMedia() {
     // Feedback
     elements.loadMediaBtn.textContent = "Loaded!";
     setTimeout(() => {
-        elements.loadMediaBtn.textContent = "Load";
+        elements.loadMediaBtn.textContent = "Load Media";
         elements.loadMediaBtn.disabled = false;
     }, 1000);
 
   } catch (error) {
     console.error("Error loading media:", error);
     elements.loadMediaBtn.textContent = "Error";
-    elements.loadMediaBtn.disabled = false;
+    setTimeout(() => {
+        elements.loadMediaBtn.textContent = "Load Media";
+        elements.loadMediaBtn.disabled = false;
+    }, 2000);
   }
 }
 
