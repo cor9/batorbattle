@@ -225,6 +225,7 @@ const elements = {
   chatInput: document.getElementById("chat-input"),
   sendBtn: document.getElementById("send-btn"),
   quickReactions: document.getElementById("quick-reactions"),
+  chatToggleBtn: document.getElementById("chat-toggle-btn"),
 };
 
 // Initialize
@@ -374,9 +375,18 @@ function setupEventListeners() {
       sendChatMessage();
     }
   });
-  elements.toggleChat.addEventListener("click", () => {
-    elements.chatSidebar.classList.toggle("open");
-  });
+  const handleChatToggle = () => {
+    if (window.innerWidth <= 768) {
+      elements.chatSidebar.classList.toggle("open");
+    } else {
+      elements.chatSidebar.classList.toggle("collapsed");
+    }
+  };
+
+  elements.toggleChat.addEventListener("click", handleChatToggle);
+  if (elements.chatToggleBtn) {
+    elements.chatToggleBtn.addEventListener("click", handleChatToggle);
+  }
   elements.quickReactions.addEventListener("click", (e) => {
     if (e.target.tagName === "SPAN") {
       sendChatMessage(e.target.textContent);

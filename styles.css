@@ -97,6 +97,7 @@ body {
     background: rgba(255, 255, 255, 0.2);
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
 }
 
 .setting-group input[type="range"]::-webkit-slider-thumb {
@@ -729,6 +730,35 @@ body:-ms-fullscreen #game-content {
     border-left: 2px solid #333;
     z-index: 1000;
     transition: transform 0.3s ease;
+    transform: translateX(0); /* Default Open on Desktop */
+}
+
+.chat-sidebar.collapsed {
+    transform: translateX(100%);
+}
+
+.chat-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    z-index: 999;
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-toggle-btn:hover {
+    transform: scale(1.1);
 }
 
 .chat-header {
@@ -833,11 +863,16 @@ body:-ms-fullscreen #game-content {
 /* Mobile: Collapsible Chat */
 @media (max-width: 768px) {
     .chat-sidebar {
-        transform: translateX(100%);
+        transform: translateX(100%); /* Default Closed on Mobile */
     }
 
     .chat-sidebar.open {
         transform: translateX(0);
+    }
+
+    /* Ensure collapsed class works if explicitly added */
+    .chat-sidebar.collapsed {
+        transform: translateX(100%);
     }
 
     .video-grid {
