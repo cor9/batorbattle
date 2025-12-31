@@ -106,8 +106,8 @@ app.get('/api/extract-video', async (req, res) => {
        return res.status(400).json({ error: 'Invalid URL format' });
     }
 
-    // Check if it's already a direct video link
-    if (url.match(/\.(mp4|webm|ogg|mov)$/i)) {
+    // Check if it's already a direct video link (allow query params)
+    if (url.match(/\.(mp4|webm|ogg|mov)(?:\?.*)?$/i)) {
         return res.json({ videoUrl: url });
     }
 

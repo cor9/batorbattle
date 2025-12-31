@@ -1224,22 +1224,26 @@ async function loadMedia() {
         console.log("Detected embeddable URL:", finalUrl);
     } else {
         // 2. Normal File/Extraction Check
-        const isDirectFile = /\.(mp4|webm|ogg|mov|mp3|wav|m4a|aac)$/i.test(url);
-        if (!isDirectFile && url.startsWith('http')) {
-            try {
-                console.log("Attempting to extract video from:", url);
-                const res = await fetch(`${API_URL}/api/extract-video?url=${encodeURIComponent(url)}`);
-                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    // Updated regex to allow query parameters (e.g. video.mp4?token=123)
+    const isDirectFile = /\.(mp4|webm|ogg|mov|mp3|wav|m4a|aac)(?:\?.*)?$/i.test(url);
 
-                const data = await res.json();
-                if (data.videoUrl) {
-                    finalUrl = data.videoUrl;
-                    console.log("Extracted media URL:", finalUrl);
-                }
-            } catch (e) {
-                console.warn("Server extraction failed, defaulting to original URL:", e);
+    if (!isDirectFile && url.startsWith('http')) {
+        try {
+            console.log("Attempting to extract video from:", url);
+            const res = await fetch(`${API_URL}/api/extract-video?url=${encodeURIComponent(url)}`);
+            if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+            const data = await res.json();
+            if (data.videoUrl) {
+                finalUrl = data.videoUrl;
+                console.log("Extracted media URL:", finalUrl);
+            } else {
+                 console.warn("No specific video found, using original.");
             }
+        } catch (e) {
+            console.warn("Server extraction failed, defaulting to original URL:", e);
         }
+    }
     }
 
     gameState.mediaUrl = finalUrl;
