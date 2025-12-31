@@ -1556,22 +1556,38 @@ function startSessionTimer() {
 function updateSessionTimer() {
   if (!gameState.isPlaying || gameState.isPaused) return;
 
-  const remaining = gameState.sessionEndTime - Date.now();
+  // Ensure start/end times are valid numbers
+  if (!gameState.sessionEndTime || !gameState.sessionStartTime) return;
+
+  const now = Date.now();
+  const remaining = gameState.sessionEndTime - now;
+
+  // Debug (throttle log)
+  if (Math.random() < 0.01) {
+      console.log(`Session Timer: Remaining ${remaining}ms, Progress: ${gameState.sessionProgress}`);
+  }
 
   if (remaining <= 0) {
-    endGame(true, "Session complete!");
+    // Only trigger end if we haven't already
+    if (gameState.phase !== 'ended') {
+        endGame(true, "Session complete!");
+    }
     return;
   }
 
   // Calculate session progress (0-1)
-  const elapsed = Date.now() - gameState.sessionStartTime;
+  const elapsed = now - gameState.sessionStartTime;
   const total = gameState.sessionEndTime - gameState.sessionStartTime;
-  gameState.sessionProgress = Math.min(1, elapsed / total);
+
+  if (total > 0) {
+      gameState.sessionProgress = Math.min(1, Math.max(0, elapsed / total));
+  } else {
+      gameState.sessionProgress = 0;
+  }
 
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000);
-  // Timer hidden for surprise element
-  // elements.timerDisplay.textContent = ...
+  // Optional: Update UI display if we decide to show it later
 
   // Update edge bar zones display
   updateEdgeBarZones();
@@ -1699,6 +1715,25 @@ function changeState() {
       duration = Math.max(1500, baseTime);
     }
   }
+
+  // Session Pacing Logic
+  // The user complained that a 15 min session only had 2 prompts.
+  // This likely means prompts were way too long or the session timer logic is broken.
+  // Ensure "speedMultiplier" doesn't make things too fast, but we also need to ensure
+  // "baseTime" isn't excessively long for short sessions, or excessively short for long ones?
+  // Actually, usually the issue is Prompts being too long for a Short session, BUT user said
+  // "15 minute session, only 2 prompts". This implies prompts lasted 7+ minutes each?!
+  //
+  // Looking at the code:
+  // strokeMin: 10000 (10s), strokeMax: 30000 (30s) -> 10-30 seconds.
+  // This shouldn't result in 7 minute prompts.
+  //
+  // POTENTIAL BUG: `speedMultiplier` calculation might be weird if sessionProgress is broken?
+  // OR `baseDuration` in instructions map is customized to be super long?
+  //
+  // Let's cap the maximum duration to ensure variety.
+  // Regardless of Difficulty, let's limit generic strokes to 45 seconds max.
+  duration = Math.min(duration, 45000);
 
   // Apply speed multiplier to ALL durations (even explicit ones) to escalate intensity
   duration = Math.max(1000, duration / speedMultiplier);
