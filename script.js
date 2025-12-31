@@ -1390,7 +1390,16 @@ function changeState() {
   duration = Math.max(1000, duration / speedMultiplier);
   duration = Math.round(duration);
 
-  // Apply transition to bar
+  // RESET BAR: User wants it to "restart for every new instruction"
+  // This turns the bar into a duration timer for the specific instruction
+  elements.edgeBar.style.transition = 'none';
+  elements.edgeBar.style.width = '0%';
+  gameState.edgeLevel = 0;
+
+  // Force reflow to ensure the 0% is rendered before we start the transition
+  void elements.edgeBar.offsetWidth;
+
+  // Apply transition for the filling animation
   elements.edgeBar.style.transition = `width ${duration}ms linear`;
 
   if (gameState.isStroking) {
@@ -1401,10 +1410,10 @@ function changeState() {
       playSound("stroke");
     }
 
-    // "Get to the edge everytime" logic
-    let targetLevel = 90 + Math.random() * 9;
+    // Target a high level (95-100%) to visually "Fill Up" the bar during the stroke
+    let targetLevel = 95 + Math.random() * 5;
 
-    // Occasional 100% push
+    // Occasional 100% push for edge triggering logic
     if (Math.random() < 0.15) {
         targetLevel = 100;
     }
@@ -1443,8 +1452,8 @@ function changeState() {
       playSound("stop");
     }
 
-    const dropAmount = 20 + Math.random() * 20;
-    let targetLevel = Math.max(0, gameState.edgeLevel - dropAmount);
+    // For STOP, also fill the bar (Red) to act as a timer for the break
+    let targetLevel = 100;
 
     gameState.edgeLevel = targetLevel;
 
