@@ -30,23 +30,53 @@ const rooms = new Map();
 
 // Generate LiveKit access token
 app.post('/api/getToken', (req, res) => {
-  const { roomName, participantName, canPublish = true } = req.body;
+  try {
+    const { roomName, participantName, canPublish = true } = req.body;
 
-  const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
-    identity: participantName,
-  });
+    // Validate required fields
+    if (!roomName || !participantName) {
+      return res.status(400).json({ error: 'roomName and participantName are required' });
+    }
 
-  token.addGrant({
-    roomJoin: true,
-    room: roomName,
-    canPublish: canPublish,
-    canSubscribe: true,
-  });
+    // Validate LiveKit credentials
+    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET || LIVEKIT_API_KEY === 'devkey' || LIVEKIT_API_SECRET === 'secret') {
+      console.error('LiveKit credentials not configured properly');
+      return res.status(500).json({ 
+        error: 'LiveKit credentials not configured',
+        hasKey: !!LIVEKIT_API_KEY,
+        hasSecret: !!LIVEKIT_API_SECRET
+      });
+    }
 
-  res.json({
-    token: token.toJwt(),
-    url: LIVEKIT_URL,
-  });
+    const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+      identity: participantName,
+    });
+
+    token.addGrant({
+      roomJoin: true,
+      room: roomName,
+      canPublish: canPublish,
+      canSubscribe: true,
+    });
+
+    const jwtToken = token.toJwt();
+    
+    if (!jwtToken || jwtToken === '{}') {
+      console.error('Token generation failed - empty token returned');
+      return res.status(500).json({ error: 'Failed to generate token' });
+    }
+
+    res.json({
+      token: jwtToken,
+      url: LIVEKIT_URL,
+    });
+  } catch (error) {
+    console.error('Error generating LiveKit token:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate token',
+      message: error.message 
+    });
+  }
 });
 
 // Socket.io connection handling
