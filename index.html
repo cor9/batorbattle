@@ -266,55 +266,61 @@
     <!-- Game Screen -->
     <div id="game-screen" class="screen">
       <div id="game-content">
-        <div id="instruction" class="instruction">Get Ready...</div>
-        <div id="timer-display" class="timer">00:00</div>
+        <div id="game-layout-container">
+          <!-- Main Game Area -->
+          <div id="game-main-area">
+            <div id="instruction" class="instruction">Get Ready...</div>
+            <div id="timer-display" class="timer">00:00</div>
 
-        <!-- Video Grid for Multiplayer -->
-        <div id="video-grid" class="video-grid"></div>
+            <!-- External Game Container -->
+            <div id="external-game-container" class="external-game-container hidden">
+              <iframe id="external-game-frame" allowfullscreen></iframe>
+            </div>
 
-        <!-- External Game Container -->
-        <div id="external-game-container" class="external-game-container hidden">
-          <iframe id="external-game-frame" allowfullscreen></iframe>
-        </div>
+            <!-- Video Edging Player -->
+            <div id="video-edging-container" class="video-edging-container hidden">
+              <video id="edging-video-player" controls></video>
+            </div>
 
-        <!-- Video Edging Player -->
-        <div id="video-edging-container" class="video-edging-container hidden">
-          <video id="edging-video-player" controls></video>
-        </div>
+            <!-- Hypno Experience Container -->
+            <div id="hypno-container" class="hypno-container hidden">
+              <canvas id="hypno-spiral"></canvas>
+              <audio id="hypno-audio-player" controls></audio>
+              <div class="hypno-controls">
+                <button id="hypno-play-pause" class="btn btn-primary">Play</button>
+                <input type="range" id="hypno-speed" min="0.5" max="2" step="0.1" value="1" />
+                <span id="hypno-speed-value">1.0x</span>
+              </div>
+            </div>
 
-        <!-- Hypno Experience Container -->
-        <div id="hypno-container" class="hypno-container hidden">
-          <canvas id="hypno-spiral"></canvas>
-          <audio id="hypno-audio-player" controls></audio>
-          <div class="hypno-controls">
-            <button id="hypno-play-pause" class="btn btn-primary">Play</button>
-            <input type="range" id="hypno-speed" min="0.5" max="2" step="0.1" value="1" />
-            <span id="hypno-speed-value">1.0x</span>
+            <div class="progress-container" id="progress-container">
+              <div class="progress-label">Edge Level</div>
+              <div id="edge-bar-container" class="edge-bar-container">
+                <div id="edge-bar" class="edge-bar"></div>
+              </div>
+              <div class="progress-percentage">
+                <span id="edge-percentage">0</span>%
+              </div>
+            </div>
+
+            <div class="game-controls">
+              <button id="pause-btn" class="btn btn-control">Pause</button>
+              <button id="failed-btn" class="btn btn-control">
+                I Came Too Early
+              </button>
+              <button id="end-game-btn" class="btn btn-control">End Game</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Player Rankings (Multiplayer) -->
-        <div id="rankings-container" class="rankings-container hidden">
-          <h3>Rankings</h3>
-          <div id="rankings-list" class="rankings-list"></div>
-        </div>
-
-        <div class="progress-container" id="progress-container">
-          <div class="progress-label">Edge Level</div>
-          <div id="edge-bar-container" class="edge-bar-container">
-            <div id="edge-bar" class="edge-bar"></div>
+          <!-- Video Sidebar -->
+          <div id="video-sidebar-container">
+            <div id="video-grid" class="video-grid"></div>
+            <!-- Player Rankings (Multiplayer) -->
+            <div id="rankings-container" class="rankings-container hidden">
+              <h3>Rankings</h3>
+              <div id="rankings-list" class="rankings-list"></div>
+            </div>
           </div>
-          <div class="progress-percentage">
-            <span id="edge-percentage">0</span>%
-          </div>
-        </div>
-
-        <div class="game-controls">
-          <button id="pause-btn" class="btn btn-control">Pause</button>
-          <button id="failed-btn" class="btn btn-control">
-            I Came Too Early
-          </button>
-          <button id="end-game-btn" class="btn btn-control">End Game</button>
         </div>
       </div>
 
