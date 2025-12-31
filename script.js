@@ -54,33 +54,70 @@ const gameState = {
     spectators: [],
     settings: {},
   },
+  phase: "warmup", // 'warmup', 'playing', 'cumming', 'denied'
+  sessionStartTime: null,
+  sessionProgress: 0, // 0-1, how far through the session
 };
 
-// Instructions pool
+// Instructions pool from gamescreens.md
 const instructions = {
   stroke: [
-    "Stroke Fast!",
-    "Stroke Slow",
-    "Normal Pace",
-    "Lube Up and Stroke",
-    "Steady Rhythm",
-    "Build the Edge",
-    "Keep Going",
-    "Don't Stop",
-    "Faster Now",
-    "Slow and Steady",
+    "Jerk off ONLY the tip, use only TWO FINGERS",
+    "Jerk off as fast as you can NOW!",
+    "Hard and Fast",
+    "Getting close",
+    "You can jerk off now",
+    "Wank it",
+    "Slow and steady",
+    "Stroke",
+    "Use your other hand",
+    "Focus on the head",
+    "Stroke and twist",
+    "Up and Down",
+    "Gently slap your balls",
+    "Slide up and down your length",
+    "Pound your penis",
+    "Jack off",
+    "Slap that Dick on your belly",
+    "Bate that dong",
+    "Grip it Harder",
+    "Light, quick strokes",
   ],
   stop: [
-    "Hands Off!",
-    "Stop Touching",
-    "No Stroking",
-    "Hold the Edge",
-    "Stay Still",
-    "Don't Move",
-    "Control Yourself",
-    "Wait...",
-    "Tease Yourself",
-    "Just Watch",
+    "Fingers on your nipples",
+    "Hands Off",
+    "Dont touch your cock",
+    "Stop and…",
+    "Wait - pull on your balls",
+    "Squeeze the tip until...",
+    "STOP TOUCHING! Calm down, be ready for the next one...",
+    "STOP",
+    "No touching",
+    "Hands to the sky",
+    "Feel your body with your hands",
+    "Lick your biceps",
+    "Flex your biceps",
+    "Hands behind your head",
+    "Dont cum stop touching",
+    "Rub your chest and belly",
+  ],
+  denied: [
+    "STOP! Sorry, no cumshot for you",
+    "Try again, maybe you will get lucky... Now get your hands off your dick until this is over.",
+    "Uh Oh! You don't get to squirt this time",
+    "Game Over - No release this time",
+    "Don't hate me, Bator but NO NUT FOR YOU",
+    "Soo close but no cigar. You may NOT cum.",
+    "No Happy Ending today.",
+  ],
+  cum: [
+    "You may cum now",
+    "You have 10 seconds to cum",
+    "Blow your load, you earned it",
+    "Erupt like a volcano",
+    "Cum now, make a mess",
+    "Ejaculation may commence",
+    "IT'S CUM TIME, Bro!",
   ],
 };
 
@@ -728,25 +765,25 @@ function updateRoomDisplay() {
 }
 
 function startBattle() {
-  console.log("startBattle called", { 
-    isHost: gameState.isHost, 
-    socket: !!socket, 
+  console.log("startBattle called", {
+    isHost: gameState.isHost,
+    socket: !!socket,
     socketConnected: socket?.connected,
-    playerCount: gameState.room?.players?.length || 0
+    playerCount: gameState.room?.players?.length || 0,
   });
-  
+
   if (!gameState.isHost) {
     console.error("Cannot start battle: User is not the host");
     alert("Only the room host can start the battle");
     return;
   }
-  
+
   if (!socket) {
     console.error("Cannot start battle: Socket not connected");
     alert("Not connected to server. Please refresh the page.");
     return;
   }
-  
+
   if (!socket.connected) {
     console.error("Cannot start battle: Socket not connected");
     alert("Connection lost. Please refresh the page.");
@@ -813,6 +850,7 @@ function startGame() {
   gameState.isPaused = false;
   gameState.edgeLevel = 0;
   gameState.isStroking = false;
+  gameState.phase = "warmup";
 
   showScreen("game-screen");
   elements.endOverlay.classList.add("hidden");
@@ -831,20 +869,15 @@ function startGame() {
       ? gameState.room.settings.sessionLength
       : gameState.settings.sessionLength;
   const sessionMs = sessionLength * 60 * 1000;
+  gameState.sessionStartTime = Date.now();
   gameState.sessionEndTime = Date.now() + sessionMs;
+  gameState.sessionProgress = 0;
 
   // Start session timer
   startSessionTimer();
 
-  // Start first state change
-  if (gameState.gameMode === "solo") {
-    changeState();
-  } else if (gameState.isHost) {
-    changeState();
-  }
-
-  // Try to enter fullscreen
-  tryEnterFullscreen();
+  // Start with warm-up phase
+  startWarmupPhase();
 }
 
 function tryEnterFullscreen() {
@@ -852,6 +885,43 @@ function tryEnterFullscreen() {
   if (elem.requestFullscreen) {
     elem.requestFullscreen().catch(() => {});
   }
+}
+
+function startWarmupPhase() {
+  gameState.phase = "warmup";
+  gameState.isStroking = false;
+  
+  // Show warm-up instructions
+  const warmupMessage = "This is the warm-up round. Start jerking off and try to get to the edge when the bar gets to 100% of the EDGE zone.\n\nYou should be ready to cum when the bar reaches the CUM zone.\n\nTry to get as close as possible, it will make the rest of the game even more fun!";
+  
+  elements.instruction.textContent = warmupMessage;
+  elements.instruction.style.fontSize = "1.2em";
+  elements.instruction.style.lineHeight = "1.6";
+  elements.instruction.style.textAlign = "center";
+  elements.instruction.style.padding = "20px";
+  elements.gameScreen.className = "screen active warmup-state";
+  
+  // Update edge bar to show zones
+  updateEdgeBarZones();
+  
+  // After 10 seconds, start the actual game
+  setTimeout(() => {
+    gameState.phase = "playing";
+    elements.instruction.style.fontSize = "";
+    elements.instruction.style.lineHeight = "";
+    elements.instruction.style.textAlign = "";
+    elements.instruction.style.padding = "";
+    
+    // Start first state change
+    if (gameState.gameMode === "solo") {
+      changeState();
+    } else if (gameState.isHost) {
+      changeState();
+    }
+    
+    // Try to enter fullscreen
+    tryEnterFullscreen();
+  }, 10000);
 }
 
 function startSessionTimer() {
@@ -869,16 +939,58 @@ function updateSessionTimer() {
     return;
   }
 
+  // Calculate session progress (0-1)
+  const elapsed = Date.now() - gameState.sessionStartTime;
+  const total = gameState.sessionEndTime - gameState.sessionStartTime;
+  gameState.sessionProgress = Math.min(1, elapsed / total);
+
   const minutes = Math.floor(remaining / 60000);
   const seconds = Math.floor((remaining % 60000) / 1000);
   elements.timerDisplay.textContent = `${String(minutes).padStart(
     2,
     "0"
   )}:${String(seconds).padStart(2, "0")}`;
+  
+  // Update edge bar zones display
+  updateEdgeBarZones();
+}
+
+function updateEdgeBarZones() {
+  // Add visual zones to the edge bar container
+  const container = elements.edgeBarContainer;
+  
+  // Remove existing zone markers if any
+  const existingZones = container.querySelectorAll('.edge-zone-marker');
+  existingZones.forEach(marker => marker.remove());
+  
+  // Add EDGE zone marker at 100%
+  const edgeZoneMarker = document.createElement('div');
+  edgeZoneMarker.className = 'edge-zone-marker edge-zone';
+  edgeZoneMarker.style.left = '100%';
+  edgeZoneMarker.style.position = 'absolute';
+  edgeZoneMarker.style.height = '100%';
+  edgeZoneMarker.style.width = '2px';
+  edgeZoneMarker.style.backgroundColor = '#ff6b6b';
+  edgeZoneMarker.style.zIndex = '10';
+  edgeZoneMarker.title = 'EDGE ZONE';
+  container.style.position = 'relative';
+  container.appendChild(edgeZoneMarker);
+  
+  // Add label for EDGE zone
+  const edgeLabel = document.createElement('div');
+  edgeLabel.className = 'edge-zone-label';
+  edgeLabel.textContent = 'EDGE ZONE';
+  edgeLabel.style.position = 'absolute';
+  edgeLabel.style.right = '0';
+  edgeLabel.style.top = '-20px';
+  edgeLabel.style.fontSize = '0.8em';
+  edgeLabel.style.color = '#ff6b6b';
+  edgeLabel.style.fontWeight = 'bold';
+  container.appendChild(edgeLabel);
 }
 
 function changeState() {
-  if (!gameState.isPlaying || gameState.isPaused) return;
+  if (!gameState.isPlaying || gameState.isPaused || gameState.phase === "warmup") return;
 
   gameState.isStroking = !gameState.isStroking;
   const settings =
@@ -886,6 +998,15 @@ function changeState() {
       ? gameState.room.settings
       : gameState.settings;
   const diff = gameState.difficultySettings[settings.difficulty];
+
+  // Speed multiplier based on session progress
+  // Last quarter (75%+) gets progressively faster
+  let speedMultiplier = 1;
+  if (gameState.sessionProgress >= 0.75) {
+    // In last quarter, speed up: 0.75 = 1x, 1.0 = 3x
+    const lastQuarterProgress = (gameState.sessionProgress - 0.75) / 0.25;
+    speedMultiplier = 1 + (lastQuarterProgress * 2); // 1x to 3x speed
+  }
 
   if (gameState.isStroking) {
     elements.gameScreen.className = "screen active stroke-state";
@@ -901,7 +1022,8 @@ function changeState() {
     const baseTime =
       diff.strokeMin + Math.random() * (diff.strokeMax - diff.strokeMin);
     const escalationFactor = 1 - gameState.edgeLevel / 200;
-    const nextTime = Math.max(3000, baseTime * escalationFactor);
+    // Apply speed multiplier - faster in last quarter
+    const nextTime = Math.max(2000, (baseTime * escalationFactor) / speedMultiplier);
 
     gameState.timer = setTimeout(changeState, nextTime);
 
@@ -918,7 +1040,8 @@ function changeState() {
 
     const baseTime =
       diff.stopMin + Math.random() * (diff.stopMax - diff.stopMin);
-    const nextTime = Math.max(2000, baseTime);
+    // Apply speed multiplier - faster in last quarter
+    const nextTime = Math.max(1500, baseTime / speedMultiplier);
 
     gameState.timer = setTimeout(changeState, nextTime);
 
@@ -980,16 +1103,34 @@ function handleEdgeReached() {
   const allowOrgasm = roll < settings.orgasmChance;
 
   if (allowOrgasm) {
-    endGame(true, "Cum now! Release yourself!");
-  } else {
-    endGame(false, "Denied! No cum for you. Stay on edge.");
+    gameState.phase = "cumming";
+    const cumMessage = instructions.cum[
+      Math.floor(Math.random() * instructions.cum.length)
+    ];
+    elements.instruction.textContent = cumMessage;
+    elements.gameScreen.className = "screen active cum-state";
+    
+    // Give 10 seconds to cum
     setTimeout(() => {
+      endGame(true, "Hope you enjoyed that release!");
+    }, 10000);
+  } else {
+    gameState.phase = "denied";
+    const deniedMessage = instructions.denied[
+      Math.floor(Math.random() * instructions.denied.length)
+    ];
+    elements.instruction.textContent = deniedMessage;
+    elements.gameScreen.className = "screen active denied-state";
+    
+    // Reset after showing denial message
+    setTimeout(() => {
+      gameState.phase = "playing";
       gameState.edgeLevel = 20;
       updateEdge(0);
       if (gameState.isPlaying && !gameState.isPaused) {
         changeState();
       }
-    }, 3000);
+    }, 5000);
   }
 }
 
