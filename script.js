@@ -1480,11 +1480,21 @@ function startWarmupPhase() {
   } else if (gameType === "video-edging") {
       // START VIDEO EDGING
       loadVideoEdging();
-      return;
+      // Important: We MUST start the game loop for prompts to appear!
+      // Previously we just returned, so the Red Light loop never started.
+      // We want the video AND the red-light prompts (hybrid mode).
+
+      // Don't return here! Let it fall through to start the loop.
+      // But we might want specific UI adjustments.
+      elements.instruction.textContent = "Get Hard...";
   } else if (gameType === "hypno") {
       // START HYPNO
       loadHypnoExperience();
-      return;
+      // Hypno also needs prompts usually? Or just the spiral?
+      // If user wants prompts with hypno, we must let it fall through.
+      // If hypno is spiral-only, we should return.
+      // Assuming prompts + spiral for now based on 'Edging Game' request.
+      elements.instruction.textContent = "Relax...";
   }
 
   // Reset visibility for standard game
