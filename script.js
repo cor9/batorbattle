@@ -1771,8 +1771,7 @@ function changeState() {
   // Speak instruction
   // speak(text); // Re-enable if we want text-to-speech
 
-  // Set timeout for next state
-  gameState.actionTimeout = setTimeout(changeState, duration);
+
 
   // RESET BAR: User wants it to "restart for every new instruction"
   // This turns the bar into a duration timer for the specific instruction
