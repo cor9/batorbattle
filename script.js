@@ -910,6 +910,10 @@ function startGame() {
   gameState.isStroking = false;
   gameState.phase = "warmup";
 
+  // Reset UI elements visibility
+  if (elements.instruction) elements.instruction.style.display = "";
+  if (elements.timerDisplay) elements.timerDisplay.style.display = "";
+
   // Get game type from room settings or default
   const gameType =
     gameState.gameMode === "multiplayer"
@@ -946,9 +950,14 @@ function startGame() {
       loadExternalGame("https://blitzedout.com/");
       break;
     case "video-edging":
+      // For video edging, we might keep instructions?
+      // User requested "load file", so maybe "Load Video" instruction remains?
+      // Let's hide main instruction to avoid "Get Ready..." overlap
+      if (elements.instruction) elements.instruction.style.display = "none";
       loadVideoEdging();
       break;
     case "hypno":
+      if (elements.instruction) elements.instruction.style.display = "none";
       loadHypnoExperience();
       break;
   }
@@ -982,11 +991,16 @@ function startRedLightGame() {
 function loadExternalGame(url) {
   if (!elements.externalGameContainer || !elements.externalGameFrame) return;
 
+  if (elements.instruction) elements.instruction.style.display = "none";
+  if (elements.timerDisplay) elements.timerDisplay.style.display = "none";
+
   elements.externalGameContainer.classList.remove("hidden");
   elements.externalGameFrame.src = url;
+
+  // Use CSS class for styling, remove manual inline styles if any meant for legacy
+  // But ensure iframe fills container
   elements.externalGameFrame.style.width = "100%";
-  elements.externalGameFrame.style.height = "80vh";
-  elements.externalGameFrame.style.border = "none";
+  elements.externalGameFrame.style.height = "100%";
 
   // Try to enter fullscreen
   tryEnterFullscreen();
