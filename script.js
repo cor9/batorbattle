@@ -93,6 +93,7 @@ const elements = {
   roomWaitingScreen: document.getElementById("room-waiting-screen"),
   optionsScreen: document.getElementById("options-screen"),
   gameScreen: document.getElementById("game-screen"),
+  profileScreen: document.getElementById("profile-screen"),
 
   // Age Gate
   enterBtn: document.getElementById("enter-btn"),
@@ -366,10 +367,13 @@ function showScreen(screenId) {
   elements.roomWaitingScreen.classList.remove("active");
   elements.optionsScreen.classList.remove("active");
   elements.gameScreen.classList.remove("active");
+  if (elements.profileScreen) elements.profileScreen.classList.remove("active");
 
-  document.getElementById(screenId).classList.add("active");
+  const el = document.getElementById(screenId);
+  if (el) el.classList.add("active");
   gameState.currentScreen = screenId;
 }
+window.showScreen = showScreen;
 
 // Settings Display
 function updateSettingsDisplay() {
