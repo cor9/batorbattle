@@ -1358,7 +1358,44 @@ function startWarmupPhase() {
   gameState.phase = "warmup";
   gameState.isStroking = false;
 
-  // Show warm-up instructions
+  // Handle various game types
+  const gameType = gameState.room?.settings?.gameType || "redlight"; // Default to main game if not set
+
+  // External Game Handling (Dice Dare, Batecards, Battleship, Blitzed Out)
+  const externalGames = {
+      "dicedare": "https://dicedare.com",
+      "batecards": "https://batecards.com",
+      "battleship": "https://battleship.batorbattle.space", // Assuming placeholder/future url
+      "blitzedout": "https://blitzedout.batorbattle.space" // Assuming placeholder/future url
+  };
+
+  if (externalGames[gameType]) {
+      // It's an external game
+      elements.instruction.textContent = "Loading Game...";
+
+      const container = document.getElementById("external-game-container");
+      const frame = document.getElementById("external-game-frame");
+      if (container && frame) {
+          container.classList.remove("hidden");
+          frame.src = externalGames[gameType];
+
+          // Hide standard game elements that might conflict
+          elements.edgeBarContainer.style.display = 'none';
+          elements.progressContainer.style.display = 'none';
+          document.getElementById("timer-display").style.display = 'none';
+
+          elements.instruction.textContent = ""; // Clear instruction as game has its own UI
+      }
+      return; // Stop standard Bator Battle loop
+  }
+
+  // Reset visibility for standard game
+  elements.edgeBarContainer.style.display = '';
+  elements.progressContainer.style.display = '';
+  document.getElementById("timer-display").style.display = '';
+
+
+  // Show warm-up instructions for Bator Battle / RedLight
   const warmupMessage =
     "This is the warm-up round. Start jerking off and try to get to the edge when the bar gets to 100% of the EDGE zone.\n\nYou should be ready to cum when the bar reaches the CUM zone.\n\nTry to get as close as possible, it will make the rest of the game even more fun!";
 
