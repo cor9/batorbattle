@@ -1284,3 +1284,15 @@ body:-ms-fullscreen #game-content {
     background: #FF9800;
     color: white;
 }
+
+/* Update to differentiate Stop state bar color */
+.stop-state .edge-bar {
+    background: linear-gradient(90deg, #e53935 0%, #ef5350 50%, #e57373 100%);
+    box-shadow: 0 0 20px rgba(239, 83, 80, 0.4);
+}
+
+.stop-state .edge-zone-marker {
+    background-color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+

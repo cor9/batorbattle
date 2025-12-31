@@ -1797,7 +1797,7 @@ function changeState() {
     let targetLevel = 95 + Math.random() * 5;
 
     // Occasional 100% push for edge triggering logic
-    if (Math.random() < 0.15) {
+    if (Math.random() < 0.05) {
         targetLevel = 100;
     }
 
@@ -1896,6 +1896,31 @@ function handleEdgeReached() {
   const allowOrgasm = roll < settings.orgasmChance;
 
   if (allowOrgasm) {
+    // PROTECT SESSION LENGTH: If not near the end (95%), deny instead
+    // Unless in "Sudden Death" or specific high-risk modes (which we don't have yet)
+    if (gameState.sessionProgress < 0.90) {
+        console.log("Orgasm rolled but DENIED due to early session phase");
+        // Fall through to denied logic
+        gameState.phase = "denied";
+        const deniedMessage = "Not yet! " + instructions.denied[Math.floor(Math.random() * instructions.denied.length)];
+        elements.instruction.innerHTML = deniedMessage;
+        elements.gameScreen.className = "screen active denied-state";
+
+        setTimeout(() => {
+          gameState.phase = "playing";
+          gameState.edgeLevel = 20;
+
+          elements.edgeBar.style.transition = "width 1s ease";
+          elements.edgeBar.style.width = "20%";
+          elements.edgePercentage.textContent = "20";
+
+          if (gameState.isPlaying && !gameState.isPaused) {
+            changeState();
+          }
+        }, 5000);
+        return;
+    }
+
     gameState.phase = "cumming";
     // Using simple string array now
     const cumMessage =
@@ -1907,7 +1932,7 @@ function handleEdgeReached() {
     setTimeout(() => {
       const postCumMessage = instructions.postCum
         ? instructions.postCum[Math.floor(Math.random() * instructions.postCum.length)]
-        : "Game Over";
+        : "Session Complete";
       endGame(true, postCumMessage);
     }, 10000);
   } else {
