@@ -24,7 +24,84 @@ git push origin main
 
 ## Step 2: Deploy Backend to AWS App Runner
 
-### Option A: Using Dockerfile (Recommended)
+### Option A: Image-Based Deployment (Recommended for Speed) ⚡
+
+**Why Image-Based?**
+- Faster deployments (~2-5 minutes vs ~10-15 minutes)
+- Build happens in GitHub Actions (often faster than App Runner)
+- More control over the build process
+- Better for CI/CD pipelines
+
+#### Prerequisites:
+1. AWS ECR repository created
+2. GitHub Actions secrets configured (see below)
+
+#### Setup Steps:
+
+1. **Create ECR Repository**
+   ```bash
+   aws ecr create-repository --repository-name bator-battle-backend --region us-east-1
+   ```
+   Note the repository URI (e.g., `123456789012.dkr.ecr.us-east-1.amazonaws.com/bator-battle-backend`)
+
+2. **Configure GitHub Secrets**
+   Go to your GitHub repository → Settings → Secrets and variables → Actions
+   Add these secrets:
+   - `AWS_ACCESS_KEY_ID`: Your AWS access key
+   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+
+   **Note:** Create an IAM user with these permissions:
+   - `ecr:GetAuthorizationToken`
+   - `ecr:BatchCheckLayerAvailability`
+   - `ecr:GetDownloadUrlForLayer`
+   - `ecr:BatchGetImage`
+   - `ecr:PutImage`
+   - `ecr:InitiateLayerUpload`
+   - `ecr:UploadLayerPart`
+   - `ecr:CompleteLayerUpload`
+
+3. **Update GitHub Actions Workflow** (if needed)
+   Edit `.github/workflows/deploy-to-ecr.yml`:
+   - Update `AWS_REGION` to your region
+   - Update `ECR_REPOSITORY` to match your ECR repository name
+   - Update `APP_RUNNER_SERVICE` to your App Runner service name
+
+4. **Create App Runner Service with Image Source**
+   - Go to AWS App Runner Console
+   - Click "Create service"
+   - Select **"Container registry"** (not Source code repository)
+   - Choose "Amazon ECR"
+   - Select your ECR repository
+   - Image tag: `latest` (or specific tag)
+   - Deployment trigger: **"Automatic"** (deploys when new image is pushed)
+
+5. **Service Settings**
+   - Service name: `bator-battle-backend`
+   - Port: `8181`
+   - Start command: (leave default, uses Dockerfile CMD)
+
+6. **Environment Variables**
+   Add these in the environment variables section:
+   ```
+   LIVEKIT_API_KEY=your-livekit-api-key
+   LIVEKIT_API_SECRET=your-livekit-api-secret
+   LIVEKIT_URL=wss://your-livekit-server.com
+   PORT=8181
+   NODE_ENV=production
+   CORS_ORIGIN=https://your-netlify-site.netlify.app,https://batorbattle.space
+   ```
+
+7. **Create Service**
+   - Review and create
+   - Initial deployment will take ~5 minutes
+   - Subsequent deployments (via GitHub Actions) will be ~2-5 minutes
+
+8. **Automatic Deployments**
+   - Every push to `main` branch triggers GitHub Actions
+   - GitHub Actions builds and pushes image to ECR
+   - App Runner automatically deploys the new image (if auto-deploy is enabled)
+
+### Option B: Code-Based Deployment (Dockerfile)
 
 1. **Go to AWS App Runner Console**
    - Navigate to AWS Console > App Runner
@@ -39,7 +116,7 @@ git push origin main
 
 3. **Service Settings**
    - Service name: `bator-battle-backend`
-   - Port: `3000`
+   - Port: `8181`
    - Start command: (leave default)
 
 4. **Environment Variables**
@@ -48,16 +125,16 @@ git push origin main
    LIVEKIT_API_KEY=your-livekit-api-key
    LIVEKIT_API_SECRET=your-livekit-api-secret
    LIVEKIT_URL=wss://your-livekit-server.com
-   PORT=3000
+   PORT=8181
    NODE_ENV=production
    ```
 
 5. **Create Service**
    - Review and create
-   - Wait for deployment (5-10 minutes)
+   - Wait for deployment (10-15 minutes)
    - Note the service URL (e.g., `https://xxxxx.us-east-1.awsapprunner.com`)
 
-### Option B: Using apprunner.yaml
+### Option C: Using apprunner.yaml
 
 1. Follow steps 1-2 above
 2. Build type: YAML
@@ -181,12 +258,30 @@ Then redeploy the backend.
 - Function logs: (if using Netlify Functions)
 - Analytics: Enable in site settings
 
+## Deployment Speed Comparison
+
+### Code-Based Deployment (Option B/C)
+- **Build time:** 10-15 minutes
+- **Why slow:** App Runner builds from source, runs `npm install` during deployment
+- **Best for:** Simple setups, one-off deployments
+
+### Image-Based Deployment (Option A) ⚡
+- **Build time:** 2-5 minutes
+- **Why fast:** GitHub Actions builds image, App Runner just pulls and runs
+- **Best for:** Frequent deployments, CI/CD pipelines
+- **Trade-off:** Requires ECR repository and GitHub Actions setup
+
 ## Cost Estimation
 
 ### AWS App Runner
 - Free tier: None
 - Pricing: ~$0.007 per vCPU per hour + $0.0008 per GB memory per hour
 - Estimated: $5-15/month for low traffic
+
+### AWS ECR (for Image-Based Deployment)
+- Free tier: 500MB storage, 500MB/month data transfer
+- Pricing: $0.10 per GB/month storage, $0.10 per GB data transfer
+- Estimated: $0-2/month for small images
 
 ### Netlify
 - Free tier: 100GB bandwidth, 300 build minutes/month
