@@ -90,6 +90,76 @@ app.post('/api/getToken', async (req, res) => {
   }
 });
 
+// Video URL extraction endpoint
+const axios = require('axios');
+const cheerio = require('cheerio');
+
+app.get('/api/extract-video', async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    // Basic validation
+    if (!url.startsWith('http')) {
+       return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    // Check if it's already a direct video link
+    if (url.match(/\.(mp4|webm|ogg|mov)$/i)) {
+        return res.json({ videoUrl: url });
+    }
+
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      },
+      timeout: 5000
+    });
+
+    const html = response.data;
+    const $ = cheerio.load(html);
+
+    let videoUrl = null;
+
+    // Strategy 1: Open Graph Video
+    videoUrl = $('meta[property="og:video"]').attr('content') ||
+               $('meta[property="og:video:url"]').attr('content') ||
+               $('meta[property="og:video:secure_url"]').attr('content');
+
+    // Strategy 2: Twitter Player Stream
+    if (!videoUrl) {
+       videoUrl = $('meta[name="twitter:player:stream"]').attr('content');
+    }
+
+    // Strategy 3: HTML5 Video tag src
+    if (!videoUrl) {
+       videoUrl = $('video').attr('src');
+    }
+
+    // Strategy 4: Source tag inside video
+    if (!videoUrl) {
+       videoUrl = $('video source').attr('src');
+    }
+
+    if (videoUrl) {
+        // Resolve relative URLs
+        if (videoUrl.startsWith('/')) {
+            const urlObj = new URL(url);
+            videoUrl = `${urlObj.protocol}//${urlObj.host}${videoUrl}`;
+        }
+        res.json({ videoUrl });
+    } else {
+        res.status(404).json({ error: 'No video found on this page' });
+    }
+
+  } catch (error) {
+    console.error('Extraction error:', error.message);
+    res.status(500).json({ error: 'Failed to extract video', details: error.message });
+  }
+});
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);

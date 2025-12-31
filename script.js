@@ -1036,15 +1036,52 @@ function loadHypnoExperience() {
   tryEnterFullscreen();
 }
 
-function loadMedia() {
+async function loadMedia() {
   const url = elements.mediaUrl?.value.trim();
-  if (url) {
-    gameState.mediaUrl = url;
-    if (gameState.gameType === "video-edging" && elements.edgingVideoPlayer) {
-      elements.edgingVideoPlayer.src = url;
-    } else if (gameState.gameType === "hypno" && elements.hypnoAudioPlayer) {
-      elements.hypnoAudioPlayer.src = url;
+  if (!url) return;
+
+  elements.loadMediaBtn.textContent = "Loading...";
+  elements.loadMediaBtn.disabled = true;
+
+  try {
+    let finalUrl = url;
+
+    // If it looks like a web page and not a direct file, try to extract
+    const isDirectFile = /\.(mp4|webm|ogg|mov)$/i.test(url);
+    if (!isDirectFile && url.startsWith('http')) {
+        try {
+            const res = await fetch(`${API_URL}/api/extract-video?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+            if (data.videoUrl) {
+                finalUrl = data.videoUrl;
+                console.log("Extracted video URL:", finalUrl);
+            }
+        } catch (e) {
+            console.warn("Server extraction failed, using original URL:", e);
+        }
     }
+
+    gameState.mediaUrl = finalUrl;
+
+    if (gameState.gameType === "video-edging" && elements.edgingVideoPlayer) {
+      elements.edgingVideoPlayer.src = finalUrl;
+      // load() is needed sometimes after src change
+      elements.edgingVideoPlayer.load();
+    } else if (gameState.gameType === "hypno" && elements.hypnoAudioPlayer) {
+      elements.hypnoAudioPlayer.src = finalUrl;
+    }
+
+    // Feedback
+    elements.loadMediaBtn.textContent = "Loaded!";
+    setTimeout(() => {
+        elements.loadMediaBtn.textContent = "Load";
+        elements.loadMediaBtn.disabled = false;
+    }, 1000);
+
+  } catch (error) {
+    console.error("Error loading media:", error);
+    elements.loadMediaBtn.textContent = "Error";
+    elements.loadMediaBtn.disabled = false;
   }
 }
 
