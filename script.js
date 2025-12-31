@@ -1512,9 +1512,10 @@ function startWarmupPhase() {
       setTimeout(() => {
           changeState();
       }, 2000);
-      // If user wants prompts with hypno, we must let it fall through.
-      // If hypno is spiral-only, we should return.
-      // Assuming prompts + spiral for now based on 'Edging Game' request.
+      setTimeout(() => {
+          changeState();
+      }, 2000);
+      return; // EXIT here so we don't hit the "Warmup" logic which overrides everything!
   }
 
   // Reset visibility for standard game
