@@ -618,6 +618,29 @@ body:-ms-fullscreen #game-content {
     content: " 👑";
 }
 
+/* Video Edging Player - Constrained size to prevent layout blowout */
+.video-edging-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 1rem auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 0.5rem;
+    max-height: 50vh; /* Restrict height so it doesn't push other elements too far */
+    overflow: hidden;
+}
+
+.video-edging-container video {
+    width: 100%;
+    height: auto;
+    max-height: 48vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
 /* Video Grid */
 .video-grid {
     display: flex;
