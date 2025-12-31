@@ -1024,7 +1024,15 @@ function loadHypnoExperience() {
   initHypnoSpiral();
 
   if (gameState.mediaUrl) {
-    elements.hypnoAudioPlayer.src = gameState.mediaUrl;
+    // Only set src if different to avoid reloading/glitching
+    // Note: src property is absolute, so simple comparison might fail if mediaUrl is relative.
+    // But usually mediaUrl here is absolute (http...) or user input.
+    // If mediaElement.src includes the mediaUrl, we assume it's loaded.
+    const currentSrc = elements.hypnoAudioPlayer.src;
+    if (!currentSrc || currentSrc !== gameState.mediaUrl) {
+         elements.hypnoAudioPlayer.src = gameState.mediaUrl;
+    }
+
     elements.hypnoAudioPlayer
       .play()
       .catch((err) => console.error("Audio play error:", err));
@@ -1046,15 +1054,16 @@ async function loadMedia() {
   try {
     let finalUrl = url;
 
-    // If it looks like a web page and not a direct file, try to extract
-    const isDirectFile = /\.(mp4|webm|ogg|mov)$/i.test(url);
+    // Check for both video and audio extensions
+    const isDirectFile = /\.(mp4|webm|ogg|mov|mp3|wav|m4a|aac)$/i.test(url);
+
     if (!isDirectFile && url.startsWith('http')) {
         try {
             const res = await fetch(`${API_URL}/api/extract-video?url=${encodeURIComponent(url)}`);
             const data = await res.json();
             if (data.videoUrl) {
                 finalUrl = data.videoUrl;
-                console.log("Extracted video URL:", finalUrl);
+                console.log("Extracted media URL:", finalUrl);
             }
         } catch (e) {
             console.warn("Server extraction failed, using original URL:", e);
@@ -1065,7 +1074,6 @@ async function loadMedia() {
 
     if (gameState.gameType === "video-edging" && elements.edgingVideoPlayer) {
       elements.edgingVideoPlayer.src = finalUrl;
-      // load() is needed sometimes after src change
       elements.edgingVideoPlayer.load();
     } else if (gameState.gameType === "hypno" && elements.hypnoAudioPlayer) {
       elements.hypnoAudioPlayer.src = finalUrl;
