@@ -554,6 +554,11 @@ async function connectSocket() {
   });
 
   socket.on("gameState", (state) => {
+    // Check if we are joining a game in progress
+    if (state.isPlaying && !gameState.isPlaying && gameState.currentScreen === 'room-waiting-screen') {
+        joinGameInProgress(state);
+    }
+
     if (state.isStroking !== undefined) {
       gameState.isStroking = state.isStroking;
       updateGameState(state);
@@ -563,6 +568,7 @@ async function connectSocket() {
   socket.on("playerUpdate", (data) => {
     updatePlayerRanking(data);
   });
+
 
   socket.on("onlineUsersUpdate", (users) => {
     if (window.ProfileSystem && window.ProfileSystem.updateOnlineUsers) {
@@ -986,6 +992,100 @@ function addChatMessage(message, type = "normal", username = "") {
 
   elements.chatMessages.appendChild(div);
   elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+}
+
+// Helper for joining mid-game
+function joinGameInProgress(state) {
+  console.log("Joining game in progress...", state);
+  gameState.isPlaying = true;
+  gameState.isPaused = false;
+  gameState.phase = "playing";
+
+  if (state.gameType) {
+      gameState.gameType = state.gameType;
+      // Also update room settings if available
+      if (gameState.room && gameState.room.settings) {
+          gameState.room.settings.gameType = state.gameType;
+      }
+  }
+
+  // Handle session timers if available (RedLight)
+  if (gameState.gameType === 'redlight' && state.startTime && gameState.room?.settings?.sessionLength) {
+      gameState.sessionStartTime = state.startTime;
+      const sessionMs = gameState.room.settings.sessionLength * 60 * 1000;
+      gameState.sessionEndTime = state.startTime + sessionMs;
+
+      // We need to start the timer loop to update progress bar
+      startSessionTimer();
+  } else if (state.startTime && gameState.room?.settings?.sessionLength) {
+    // Other games usually use session timer too
+    gameState.sessionStartTime = state.startTime;
+    const sessionMs = gameState.room.settings.sessionLength * 60 * 1000;
+    gameState.sessionEndTime = state.startTime + sessionMs;
+    startSessionTimer();
+  }
+
+  showScreen("game-screen");
+
+  // Show Room Code in Game
+  const roomInfo = document.getElementById("game-room-info");
+  const roomText = document.getElementById("game-room-code-text");
+  if (gameState.roomName) {
+      if (roomInfo) roomInfo.classList.remove("hidden");
+      if (roomText) roomText.textContent = gameState.roomName;
+  }
+
+  // Hide end game screens
+  elements.endOverlay.classList.add("hidden");
+  elements.rankingsContainer.classList.add("hidden");
+
+  // Init Audio
+  if (window.AudioManager) AudioManager.init();
+
+  // Load specific game UI
+  // Reuse logic from startGame but modify elements visibility directly
+  const gameType = gameState.gameType;
+
+  // Reset/Hide containers
+  elements.progressContainer?.classList.add("hidden");
+  elements.externalGameContainer?.classList.add("hidden");
+  elements.videoEdgingContainer?.classList.add("hidden");
+  elements.hypnoContainer?.classList.add("hidden");
+
+  switch (gameType) {
+    case "redlight":
+        elements.progressContainer?.classList.remove("hidden");
+        // Update edge bar zones
+        updateEdgeBarZones();
+        elements.edgeBar.style.width = "0%";
+        elements.edgePercentage.textContent = "0";
+        break;
+    case "dicedare":
+        loadExternalGame("https://dicedare.batecards.online/");
+        break;
+    case "batecards":
+        loadExternalGame("https://batecards.online/");
+        break;
+    case "battleship":
+        loadExternalGame("http://en.battleship-game.org/id85226959");
+        break;
+    case "blitzedout":
+        loadExternalGame("https://blitzedout.com/");
+        break;
+    case "video-edging":
+        if (elements.instruction) elements.instruction.style.display = "none";
+        loadVideoEdging();
+        setTimeout(() => { changeState(); }, 2000);
+        break;
+    case "hypno":
+        if (elements.instruction) elements.instruction.style.display = "none";
+        loadHypnoExperience();
+        setTimeout(() => { changeState(); }, 2000);
+        break;
+  }
+
+  // Show video grid
+  elements.videoGrid.style.display = "grid";
 }
 
 // Game Functions (Solo and Multiplayer)
