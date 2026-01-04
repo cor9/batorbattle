@@ -505,9 +505,21 @@ async function connectSocket() {
     });
   });
 
+  socket.on("connect_error", (err) => {
+    console.error("Socket connection error:", err);
+    // Only alert if it persists or is critical, otherwise it might be annoying during quick reconnects
+    // But for debugging "unable to see each other", let's log it visibly
+    addChatMessage(`Connection Error: ${err.message}`, "system");
+  });
+
   socket.on("roomUpdate", (data) => {
-    gameState.room.players = data.players;
-    gameState.room.spectators = data.spectators;
+    console.log("Received roomUpdate:", data);
+    if (!data.players) {
+        console.error("roomUpdate missing players data");
+    }
+
+    gameState.room.players = data.players || [];
+    gameState.room.spectators = data.spectators || [];
     if (data.settings) {
       gameState.room.settings = data.settings;
     }
@@ -654,6 +666,11 @@ async function joinLiveKitRoom(role) {
 
     const { token, url } = await response.json();
 
+    // Check for LiveKit global
+    if (typeof LivekitClient === "undefined") {
+      throw new Error("LiveKit client library not loaded. Check internet connection.");
+    }
+
     // Connect to LiveKit room
     const { Room, VideoPresets } = LivekitClient;
     room = new Room();
@@ -689,23 +706,41 @@ async function joinLiveKitRoom(role) {
         }
       } catch (error) {
         console.error("Error enabling camera:", error);
+        addChatMessage("Could not enable camera/microphone. Check permissions.", "system");
       }
     }
 
-    // Handle remote participants
-    room.on("participantConnected", (participant) => {
-      participant.on("trackSubscribed", (track, publication, participant) => {
+    // Handle remote participants using Room events for better reliability
+    room
+      .on("trackSubscribed", (track, publication, participant) => {
         if (track.kind === "video") {
           addRemoteVideo(track, participant);
+        } else if (track.kind === "audio") {
+          const element = track.attach();
+          document.body.appendChild(element);
         }
+      })
+      .on("trackUnsubscribed", (track, publication, participant) => {
+        if (track.kind === "video") {
+          removeRemoteVideo(participant);
+        } else if (track.kind === "audio") {
+          track.detach().forEach((element) => element.remove());
+        }
+      })
+      .on("participantDisconnected", (participant) => {
+        removeRemoteVideo(participant);
       });
-    });
 
-    // Handle existing participants
+    // Handle existing participants (in case we join late)
     room.remoteParticipants.forEach((participant) => {
       participant.trackPublications.forEach((publication) => {
-        if (publication.kind === "video" && publication.isSubscribed) {
-          addRemoteVideo(publication.track, participant);
+        if (publication.track) {
+          if (publication.kind === "video") {
+            addRemoteVideo(publication.track, participant);
+          } else if (publication.kind === "audio") {
+            const element = publication.track.attach();
+            document.body.appendChild(element);
+          }
         }
       });
     });
@@ -716,12 +751,15 @@ async function joinLiveKitRoom(role) {
     const errorMessage =
       error.message ||
       "Failed to connect to video room. Please check your camera permissions.";
-    alert(errorMessage);
 
-    // Return to lobby if connection fails
-    if (gameState.gameMode === "multiplayer") {
-      leaveRoom();
-    }
+    // Don't alert blocking modal, just show in chat/log
+    addChatMessage(`Video Error: ${errorMessage}`, "system");
+    alert(`Video connection failed: ${errorMessage}\nYou can continue without video.`);
+
+    // Do NOT leave the room. Allow play without video.
+    // if (gameState.gameMode === "multiplayer") {
+    //   leaveRoom();
+    // }
   }
 }
 
@@ -806,6 +844,17 @@ function addRemoteVideo(track, participant) {
   container.appendChild(label);
 
   elements.videoGrid.appendChild(container);
+}
+
+function removeRemoteVideo(participant) {
+  const participantId = participant.identity;
+  const videoItems = elements.videoGrid.querySelectorAll('.video-item');
+
+  videoItems.forEach(item => {
+    if (item.dataset.participantId === participantId) {
+       item.remove();
+    }
+  });
 }
 
 function clearVideoGrid() {
