@@ -4,7 +4,7 @@ const API_URL =
 
 // Feature Flags
 const FEATURES = (window.APP_CONFIG && window.APP_CONFIG.FEATURES) || {
-  PHASE2_PROFILES: false,
+  PHASE2_PROFILES: true,
 };
 window.FEATURES = FEATURES;
 
