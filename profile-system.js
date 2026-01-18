@@ -14,29 +14,45 @@ const ProfileSystem = {
         }
 
         // Initialize Supabase
+        console.log("Initializing Supabase...");
         if (window.supabase) {
-            this.supabase = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY);
+            try {
+                this.supabase = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY);
+                console.log("Supabase client created successfully");
+            } catch (err) {
+                console.error("Failed to create Supabase client:", err);
+                alert("Critical Error: Supabase configuration is invalid. Check console.");
+            }
         } else {
-            console.error("Supabase client not loaded");
+            console.error("Supabase script not loaded on window object");
+            alert("Critical Error: Supabase library not loaded. Check internet connection or ad blockers.");
             return;
         }
 
         this.setupEventListeners();
-        this.checkAuth();
-    },
 
-    async checkAuth() {
-        const { data: { session } } = await this.supabase.auth.getSession();
+        // Listen for auth changes (Handle initial session and subsequent sign-ins)
+        this.supabase.auth.onAuthStateChange((event, session) => {
+            console.log("Auth State Change:", event);
+            if (session) {
+                this.user = session.user;
+                gameState.userId = this.user.id;
 
-        if (session) {
-            this.user = session.user;
-            gameState.userId = this.user.id;
-            this.loadProfile();
-            // Show lobby if already on profile screen (handled in script.js logic mostly, but we can force it)
-        } else {
-             // User needs to login
-             // Auth screen is now part of profile screen
-        }
+                // Hide auth, show profile
+                if (document.getElementById('auth-section')) {
+                     document.getElementById('auth-section').style.display = 'none';
+                     document.getElementById('profile-setup-section').style.display = 'block';
+                }
+
+                this.loadProfile();
+            } else {
+                this.user = null;
+                if (document.getElementById('auth-section')) {
+                     document.getElementById('auth-section').style.display = 'block';
+                     document.getElementById('profile-setup-section').style.display = 'none';
+                }
+            }
+        });
     },
 
     setupEventListeners() {
@@ -44,8 +60,9 @@ const ProfileSystem = {
         const signinBtn = document.getElementById('auth-signin-btn');
         const signupBtn = document.getElementById('auth-signup-btn');
 
-        if (signinBtn) signinBtn.addEventListener('click', () => this.handleSignIn());
-        if (signupBtn) signupBtn.addEventListener('click', () => this.handleSignUp());
+        // Pass event object to handlers
+        if (signinBtn) signinBtn.addEventListener('click', (e) => this.handleSignIn(e));
+        if (signupBtn) signupBtn.addEventListener('click', (e) => this.handleSignUp(e));
 
         // Profile Buttons
         const saveProfileBtn = document.getElementById('save-profile-btn');
@@ -72,7 +89,9 @@ const ProfileSystem = {
         if (editProfileBtn) editProfileBtn.addEventListener('click', () => this.editProfile());
     },
 
-    async handleSignIn() {
+    async handleSignIn(e) {
+        if(e) e.preventDefault();
+
         const email = document.getElementById('auth-email').value;
         const password = document.getElementById('auth-password').value;
         const errorEl = document.getElementById('auth-error');
@@ -82,6 +101,8 @@ const ProfileSystem = {
             errorEl.style.display = "block";
             return;
         }
+
+        errorEl.style.display = 'none';
 
         const { data, error } = await this.supabase.auth.signInWithPassword({
             email,
@@ -89,18 +110,19 @@ const ProfileSystem = {
         });
 
         if (error) {
+            console.error("Sign In Error:", error);
             errorEl.textContent = error.message;
             errorEl.style.display = "block";
-        } else {
-            console.log("Signed in:", data);
-            this.user = data.user;
-            gameState.userId = this.user.id;
-            this.showProfileSetup();
-            this.loadProfile();
+            errorEl.style.color = "#ff5252";
         }
+        // Success is handled by onAuthStateChange
     },
 
-    async handleSignUp() {
+    async handleSignUp(e) {
+        console.log("handleSignUp called"); // Verify function is called
+        // Re-enable button explicitly if needed
+        if(e) e.preventDefault();
+
         const email = document.getElementById('auth-email').value;
         const password = document.getElementById('auth-password').value;
         const errorEl = document.getElementById('auth-error');
@@ -111,19 +133,25 @@ const ProfileSystem = {
             return;
         }
 
+        errorEl.style.display = 'none';
+
         const { data, error } = await this.supabase.auth.signUp({
             email,
             password
         });
 
         if (error) {
+            console.error("Sign Up Error:", error);
             errorEl.textContent = error.message;
             errorEl.style.display = "block";
-        } else {
-            errorEl.textContent = "Check your email for the confirmation link!";
-            errorEl.style.color = "green";
+            errorEl.style.color = "#ff5252";
+        } else if (data && !data.session) {
+            // Success but email confirmation required
+            errorEl.textContent = "Sign up successful! Please check your email for the confirmation link.";
+            errorEl.style.color = "#4CAF50"; // Green
             errorEl.style.display = "block";
         }
+        // If data.session exists, onAuthStateChange will handle it
     },
 
     showProfileSetup() {

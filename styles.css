@@ -1046,6 +1046,16 @@ body:-ms-fullscreen #game-content {
     backdrop-filter: blur(10px);
     overflow-y: auto;
     max-height: 90vh;
+    /* Ensure content is interactive */
+    position: relative;
+    z-index: 100;
+}
+
+#auth-section .button-group button {
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    z-index: 101;
 }
 
 .profile-header {
