@@ -197,11 +197,16 @@ function init() {
   const urlParams = new URLSearchParams(window.location.search);
   const roomCode = urlParams.get('room');
   if (roomCode) {
-    const roomInput = document.getElementById('room-code');
     if (roomInput) {
       roomInput.value = roomCode;
       // Optionally could auto-focus or highlight join section
     }
+  }
+
+  // Ensure profile system is initialized to catch auth redirects
+  if (FEATURES.PHASE2_PROFILES && window.ProfileSystem) {
+      // Sometimes DOMContentLoaded fires before script.js init, so we double check
+      if (!window.ProfileSystem.supabase) window.ProfileSystem.init();
   }
 }
 
@@ -1147,7 +1152,7 @@ function startGame() {
 
   // Reset UI elements visibility
   if (elements.instruction) elements.instruction.style.display = "";
-  if (elements.timerDisplay) elements.timerDisplay.style.display = "";
+  if (elements.timerDisplay) elements.timerDisplay.style.display = "none";
 
   // Get game type from room settings or default
   const gameType =
@@ -1670,7 +1675,12 @@ function startWarmupPhase() {
   // Reset visibility for standard game
   elements.edgeBarContainer.style.display = '';
   elements.progressContainer.style.display = '';
-  document.getElementById("timer-display").style.display = '';
+  document.getElementById("timer-display").style.display = 'none'; // Keep hidden during warmup, or show if intended? User said "every game", implying it shouldn't show for others.
+  // Standard logic: Warmup has no visible countdown usually, just the bar.
+  // But if we want it for the MAIN game:
+  // Let's actually keep it hidden during warmup, and only show if specific timer functions call it?
+  // User asked: "Why does EVERY game show the timer?"
+  // I will hide it here.
 
 
   // Show warm-up instructions for Bator Battle / RedLight
@@ -1765,12 +1775,15 @@ function updateSessionTimer() {
       gameState.sessionProgress = 0;
   }
 
-  const minutes = Math.floor(remaining / 60000);
-  const seconds = Math.floor((remaining % 60000) / 1000);
-  // Optional: Update UI display if we decide to show it later
-
   // Update edge bar zones display
   updateEdgeBarZones();
+
+  // Update timer text but keep hidden unless specifically enabled elsewhere
+  const minutes = Math.floor(remaining / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+  if (elements.timerDisplay) {
+      elements.timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }
 }
 
 function updateEdgeBarZones() {
