@@ -211,8 +211,8 @@ function setupEventListeners() {
   elements.enterBtn.addEventListener("click", () => {
     // Phase 2: Check for profile if enabled
     if (FEATURES.PHASE2_PROFILES && window.ProfileSystem) {
-      const profile = ProfileSystem.loadProfile();
-      if (!profile) {
+      // With Supabase, checkAuth will handle navigation or we check `ProfileSystem.user`
+      if (!window.ProfileSystem.user) {
         showScreen("profile-screen");
         return;
       }

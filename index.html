@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bator Battle - Edge Control Game</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/livekit-client@latest/dist/livekit-client.umd.js"></script>
   </head>
@@ -28,13 +29,33 @@
     <!-- Profile Creation/Edit Screen (Phase 2) -->
     <div id="profile-screen" class="screen">
       <div class="profile-content">
-        <h1 class="profile-header">Setup Profile</h1>
+        <h1 class="profile-header">Bator Profile</h1>
 
-        <label for="profile-photo" class="profile-photo-upload">
-          <img id="profile-photo-preview" src="" alt="Profile Preview" />
-          <input type="file" id="profile-photo" accept="image/*" style="display: none;" />
-          <div id="photo-placeholder" style="font-size: 2rem;">📷</div>
-        </label>
+        <!-- Auth Section -->
+        <div id="auth-section">
+            <h2 style="text-align: center; margin-bottom: 20px;">Sign In / Sign Up</h2>
+            <div class="input-group">
+                <label for="auth-email">Email</label>
+                <input type="email" id="auth-email" placeholder="Enter your email" />
+            </div>
+            <div class="input-group">
+                <label for="auth-password">Password</label>
+                <input type="password" id="auth-password" placeholder="Enter your password" />
+            </div>
+            <div class="button-group">
+                <button id="auth-signin-btn" class="btn btn-primary">Sign In</button>
+                <button id="auth-signup-btn" class="btn btn-secondary">Sign Up</button>
+            </div>
+            <p id="auth-error" style="color: #ff5252; text-align: center; margin-top: 10px; display: none;"></p>
+        </div>
+
+        <!-- Profile Setup Section (Hidden by default) -->
+        <div id="profile-setup-section" style="display: none;">
+            <label for="profile-photo" class="profile-photo-upload">
+            <img id="profile-photo-preview" src="" alt="Profile Preview" />
+            <input type="file" id="profile-photo" accept="image/*" style="display: none;" />
+            <div id="photo-placeholder" style="font-size: 2rem;">📷</div>
+            </label>
 
         <div class="input-group">
           <label for="profile-name">Display Name *</label>
@@ -118,6 +139,7 @@
         <div class="button-group">
           <button id="save-profile-btn" class="btn btn-primary">Save Profile</button>
           <button id="skip-profile-btn" class="btn btn-secondary">Guest Mode</button>
+        </div>
         </div>
       </div>
     </div>

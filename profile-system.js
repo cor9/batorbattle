@@ -1,500 +1,335 @@
-// Phase 2: Profile & Auth System
-// Feature flagged - only active when FEATURES.PHASE2_PROFILES is true
-
-// Make ProfileSystem globally accessible - after definition
-// window.ProfileSystem = ProfileSystem; // Removed, will define later
-
-// Profile Management
+// Profile System using Supabase (Replaces LocalStorage)
 const ProfileSystem = {
-  // Initialize profile system
-  init() {
-    // If disabled, ensure UI elements are hidden
-    if (!FEATURES.PHASE2_PROFILES) {
-      const elementsToHide = ['show-online-users-btn', 'edit-profile-btn', 'online-users-sidebar'];
-      elementsToHide.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.style.display = 'none';
-      });
-      return;
-    }
+    supabase: null,
+    user: null,
 
-    this.setupEventListeners();
-    this.loadProfile();
-    // Auth check is handled by script.js navigation flow
-  },
-
-  // Check if user is authenticated
-  checkAuth() {
-    const profile = this.loadProfile();
-    const userId = localStorage.getItem('batorbattle_userId');
-
-    if (!profile || !userId) {
-      // Show auth screen if feature is enabled
-      if (FEATURES.PHASE2_PROFILES) {
-        // For now, skip auth and go to age gate
-        // When feature is enabled, show auth screen first
-        return;
-      }
-    } else {
-      gameState.profile = profile;
-      gameState.userId = userId;
-    }
-  },
-
-  // Setup event listeners
-  setupEventListeners() {
-    if (!FEATURES.PHASE2_PROFILES) return;
-
-    // Profile creation
-    const saveProfileBtn = document.getElementById('save-profile-btn');
-    const skipProfileBtn = document.getElementById('skip-profile-btn');
-    const profilePhoto = document.getElementById('profile-photo');
-
-    if (saveProfileBtn) {
-      saveProfileBtn.addEventListener('click', () => this.saveProfile());
-    }
-    if (skipProfileBtn) {
-      skipProfileBtn.addEventListener('click', () => this.skipProfile());
-    }
-    if (profilePhoto) {
-      profilePhoto.addEventListener('change', (e) => this.handlePhotoUpload(e));
-    }
-
-    // Profile view modal
-    const closeProfileModal = document.getElementById('close-profile-modal');
-    const dmUserBtn = document.getElementById('dm-user-btn');
-    const addFriendBtn = document.getElementById('add-friend-btn');
-    const blockUserBtn = document.getElementById('block-user-btn');
-
-    if (closeProfileModal) {
-      closeProfileModal.addEventListener('click', () => this.closeProfileModal());
-    }
-    if (dmUserBtn) {
-      dmUserBtn.addEventListener('click', () => this.openDM());
-    }
-    if (addFriendBtn) {
-      addFriendBtn.addEventListener('click', () => this.addFriend());
-    }
-    if (blockUserBtn) {
-      blockUserBtn.addEventListener('click', () => this.blockUser());
-    }
-
-    // Online users sidebar
-    const toggleOnlineUsers = document.getElementById('toggle-online-users');
-    if (toggleOnlineUsers) {
-      toggleOnlineUsers.addEventListener('click', () => this.toggleOnlineUsersSidebar());
-    }
-
-    // Auth buttons
-    const guestContinueBtn = document.getElementById('guest-continue-btn');
-    if (guestContinueBtn) {
-      guestContinueBtn.addEventListener('click', () => this.continueAsGuest());
-    }
-
-    // Phase 2 controls
-    const showOnlineUsersBtn = document.getElementById('show-online-users-btn');
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-
-    if (showOnlineUsersBtn) {
-      showOnlineUsersBtn.addEventListener('click', () => {
-        const sidebar = document.getElementById('online-users-sidebar');
-        if (sidebar) {
-          sidebar.classList.remove('hidden');
+    init() {
+        if (!APP_CONFIG.FEATURES.PHASE2_PROFILES) {
+             const elementsToHide = ['show-online-users-btn', 'edit-profile-btn', 'online-users-sidebar'];
+             elementsToHide.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+             });
+             return;
         }
-      });
-    }
 
-    if (editProfileBtn) {
-      editProfileBtn.addEventListener('click', () => this.editProfile());
-    }
-  },
-
-  // Generate unique user ID
-  generateUserId() {
-    return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  },
-
-  // Save profile
-  saveProfile() {
-    const profile = {
-      name: document.getElementById('profile-name')?.value.trim() || 'Anonymous',
-      photo: gameState.profile?.photo || null,
-      age: document.getElementById('profile-age')?.value || '',
-      orientation: document.getElementById('profile-orientation')?.value || '',
-      aboutMe: this.getSelectedTags(),
-      links: {
-        x: document.getElementById('profile-link-x')?.value.trim() || '',
-        bluesky: document.getElementById('profile-link-bluesky')?.value.trim() || '',
-        bateworld: document.getElementById('profile-link-bateworld')?.value.trim() || '',
-        discord: document.getElementById('profile-link-discord')?.value.trim() || '',
-        telegram: document.getElementById('profile-link-telegram')?.value.trim() || '',
-        fetlife: document.getElementById('profile-link-fetlife')?.value.trim() || '',
-        reddit: document.getElementById('profile-link-reddit')?.value.trim() || '',
-      },
-      createdAt: Date.now(),
-      lastSeen: Date.now(),
-    };
-
-    // Generate user ID if doesn't exist
-    if (!gameState.userId) {
-      gameState.userId = this.generateUserId();
-      localStorage.setItem('batorbattle_userId', gameState.userId);
-    }
-
-    // Save profile
-    gameState.profile = profile;
-    localStorage.setItem('batorbattle_profile', JSON.stringify(profile));
-    localStorage.setItem('batorbattle_userId', gameState.userId);
-
-    // Emit profile update to server
-    if (socket) {
-      socket.emit('profileUpdate', { userId: gameState.userId, profile });
-    }
-
-    // Go to lobby
-    if (window.showScreen) {
-      window.showScreen('lobby-screen');
-    }
-  },
-
-  // Get selected tags
-  getSelectedTags() {
-    const checkboxes = document.querySelectorAll('#about-me-tags input[type="checkbox"]:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
-  },
-
-  // Handle photo upload
-  handlePhotoUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const preview = document.getElementById('profile-photo-preview');
-      if (preview) {
-        preview.src = e.target.result;
-        preview.style.display = 'block';
-      }
-      // Store as base64 for now (in production, upload to server)
-      if (!gameState.profile) gameState.profile = {};
-      gameState.profile.photo = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  },
-
-  // Skip profile creation
-  skipProfile() {
-    // Create minimal profile
-    if (!gameState.userId) {
-      gameState.userId = this.generateUserId();
-      localStorage.setItem('batorbattle_userId', gameState.userId);
-    }
-
-    gameState.profile = {
-      name: 'Anonymous',
-      photo: null,
-      age: '',
-      orientation: '',
-      aboutMe: [],
-      links: {},
-      createdAt: Date.now(),
-    };
-
-    localStorage.setItem('batorbattle_profile', JSON.stringify(gameState.profile));
-    if (window.showScreen) {
-      window.showScreen('lobby-screen');
-    }
-  },
-
-  // Load profile from localStorage
-  loadProfile() {
-    try {
-      const profileJson = localStorage.getItem('batorbattle_profile');
-      if (profileJson) {
-        return JSON.parse(profileJson);
-      }
-    } catch (e) {
-      console.error('Error loading profile:', e);
-    }
-    return null;
-  },
-
-  // Show profile view modal
-  showProfile(userId, profile) {
-    if (!FEATURES.PHASE2_PROFILES) return;
-
-    const modal = document.getElementById('profile-view-modal');
-    const content = document.getElementById('profile-view-content');
-
-    if (!modal || !content) return;
-
-    // Store current viewed user
-    modal.dataset.viewedUserId = userId;
-
-    // Build profile HTML
-    content.innerHTML = `
-      <div class="profile-view">
-        ${profile.photo ? `<img src="${profile.photo}" alt="${profile.name}" class="profile-view-photo" />` : '<div class="profile-view-photo-placeholder">No Photo</div>'}
-        <h2>${profile.name || 'Anonymous'}</h2>
-        ${profile.age ? `<p><strong>Age:</strong> ${profile.age}</p>` : ''}
-        ${profile.orientation ? `<p><strong>Orientation:</strong> ${profile.orientation}</p>` : ''}
-        ${profile.aboutMe && profile.aboutMe.length > 0 ? `
-          <div class="profile-tags">
-            <strong>About:</strong>
-            ${profile.aboutMe.map(tag => `<span class="tag">${tag}</span>`).join('')}
-          </div>
-        ` : ''}
-        ${this.buildProfileLinks(profile.links)}
-      </div>
-    `;
-
-    // Update button states
-    const isFriend = gameState.friends.includes(userId);
-    const isBlocked = gameState.blockedUsers.includes(userId);
-
-    const addFriendBtn = document.getElementById('add-friend-btn');
-    if (addFriendBtn) {
-      addFriendBtn.textContent = isFriend ? 'Remove Friend' : 'Add Friend';
-      addFriendBtn.dataset.isFriend = isFriend;
-    }
-
-    const blockUserBtn = document.getElementById('block-user-btn');
-    if (blockUserBtn) {
-      blockUserBtn.textContent = isBlocked ? 'Unblock' : 'Block';
-      blockUserBtn.dataset.isBlocked = isBlocked;
-    }
-
-    modal.classList.remove('hidden');
-  },
-
-  // Build profile links HTML
-  buildProfileLinks(links) {
-    if (!links || Object.keys(links).length === 0) return '';
-
-    const linkLabels = {
-      x: 'X',
-      bluesky: 'Bluesky',
-      bateworld: 'Bateworld',
-      discord: 'Discord',
-      telegram: 'Telegram',
-      fetlife: 'Fetlife',
-      reddit: 'Reddit',
-    };
-
-    const linkItems = Object.entries(links)
-      .filter(([key, value]) => value && value.trim())
-      .map(([key, value]) => {
-        let url = value;
-        if (key === 'discord' && !value.startsWith('http')) {
-          url = `https://discord.com/users/${value}`;
-        } else if (key === 'telegram' && !value.startsWith('http')) {
-          url = `https://t.me/${value.replace('@', '')}`;
+        // Initialize Supabase
+        if (window.supabase) {
+            this.supabase = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY);
+        } else {
+            console.error("Supabase client not loaded");
+            return;
         }
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkLabels[key]}</a>`;
-      })
-      .join(' | ');
 
-    return linkItems ? `<div class="profile-links"><strong>Links:</strong> ${linkItems}</div>` : '';
-  },
+        this.setupEventListeners();
+        this.checkAuth();
+    },
 
-  // Close profile modal
-  closeProfileModal() {
-    const modal = document.getElementById('profile-view-modal');
-    if (modal) {
-      modal.classList.add('hidden');
-    }
-  },
+    async checkAuth() {
+        const { data: { session } } = await this.supabase.auth.getSession();
 
-  // Open DM
-  openDM() {
-    const modal = document.getElementById('profile-view-modal');
-    const userId = modal?.dataset.viewedUserId;
-    if (!userId) return;
+        if (session) {
+            this.user = session.user;
+            gameState.userId = this.user.id;
+            this.loadProfile();
+            // Show lobby if already on profile screen (handled in script.js logic mostly, but we can force it)
+        } else {
+             // User needs to login
+             // Auth screen is now part of profile screen
+        }
+    },
 
-    // Close profile modal
-    this.closeProfileModal();
+    setupEventListeners() {
+        // Auth Buttons
+        const signinBtn = document.getElementById('auth-signin-btn');
+        const signupBtn = document.getElementById('auth-signup-btn');
 
-    // Open chat sidebar and focus on DM
-    // TODO: Implement DM functionality
-    alert('Direct Message feature coming soon!');
-  },
+        if (signinBtn) signinBtn.addEventListener('click', () => this.handleSignIn());
+        if (signupBtn) signupBtn.addEventListener('click', () => this.handleSignUp());
 
-  // Add/Remove friend
-  addFriend() {
-    const modal = document.getElementById('profile-view-modal');
-    const userId = modal?.dataset.viewedUserId;
-    if (!userId) return;
+        // Profile Buttons
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+        if (saveProfileBtn) saveProfileBtn.addEventListener('click', () => this.saveProfile());
 
-    const isFriend = gameState.friends.includes(userId);
+        const profilePhoto = document.getElementById('profile-photo');
+        if (profilePhoto) profilePhoto.addEventListener('change', (e) => this.handlePhotoUpload(e));
 
-    if (isFriend) {
-      gameState.friends = gameState.friends.filter(id => id !== userId);
-    } else {
-      gameState.friends.push(userId);
-    }
+        // Other existing listeners
+        const showOnlineUsersBtn = document.getElementById('show-online-users-btn');
+        if (showOnlineUsersBtn) showOnlineUsersBtn.addEventListener('click', () => {
+             document.getElementById('online-users-sidebar')?.classList.remove('hidden');
+        });
 
-    // Save to localStorage
-    localStorage.setItem('batorbattle_friends', JSON.stringify(gameState.friends));
+        const closeOnlineUsersBtn = document.getElementById('toggle-online-users');
+        if (closeOnlineUsersBtn) closeOnlineUsersBtn.addEventListener('click', () => {
+            document.getElementById('online-users-sidebar')?.classList.add('hidden');
+        });
 
-    // Update UI
-    const addFriendBtn = document.getElementById('add-friend-btn');
-    if (addFriendBtn) {
-      addFriendBtn.textContent = isFriend ? 'Add Friend' : 'Remove Friend';
-      addFriendBtn.dataset.isFriend = !isFriend;
-    }
+         const closeProfileModal = document.getElementById('close-profile-modal');
+        if (closeProfileModal) closeProfileModal.addEventListener('click', () => this.closeProfileModal());
 
-    // Emit to server
-    if (socket) {
-      socket.emit('friendUpdate', { userId, action: isFriend ? 'remove' : 'add' });
-    }
-  },
+        const editProfileBtn = document.getElementById('edit-profile-btn');
+        if (editProfileBtn) editProfileBtn.addEventListener('click', () => this.editProfile());
+    },
 
-  // Block/Unblock user
-  blockUser() {
-    const modal = document.getElementById('profile-view-modal');
-    const userId = modal?.dataset.viewedUserId;
-    if (!userId) return;
+    async handleSignIn() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const errorEl = document.getElementById('auth-error');
 
-    const isBlocked = gameState.blockedUsers.includes(userId);
+        if (!email || !password) {
+            errorEl.textContent = "Please enter email and password";
+            errorEl.style.display = "block";
+            return;
+        }
 
-    if (isBlocked) {
-      gameState.blockedUsers = gameState.blockedUsers.filter(id => id !== userId);
-    } else {
-      gameState.blockedUsers.push(userId);
-    }
+        const { data, error } = await this.supabase.auth.signInWithPassword({
+            email,
+            password
+        });
 
-    // Save to localStorage
-    localStorage.setItem('batorbattle_blockedUsers', JSON.stringify(gameState.blockedUsers));
+        if (error) {
+            errorEl.textContent = error.message;
+            errorEl.style.display = "block";
+        } else {
+            console.log("Signed in:", data);
+            this.user = data.user;
+            gameState.userId = this.user.id;
+            this.showProfileSetup();
+            this.loadProfile();
+        }
+    },
 
-    // Update UI
-    const blockUserBtn = document.getElementById('block-user-btn');
-    if (blockUserBtn) {
-      blockUserBtn.textContent = isBlocked ? 'Block' : 'Unblock';
-      blockUserBtn.dataset.isBlocked = !isBlocked;
-    }
+    async handleSignUp() {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        const errorEl = document.getElementById('auth-error');
 
-    // Emit to server
-    if (socket) {
-      socket.emit('blockUpdate', { userId, action: isBlocked ? 'unblock' : 'block' });
-    }
+        if (!email || !password) {
+            errorEl.textContent = "Please enter email and password";
+            errorEl.style.display = "block";
+            return;
+        }
 
-    // Close modal
-    this.closeProfileModal();
-  },
+        const { data, error } = await this.supabase.auth.signUp({
+            email,
+            password
+        });
 
-  // Toggle online users sidebar
-  toggleOnlineUsersSidebar() {
-    const sidebar = document.getElementById('online-users-sidebar');
-    if (!sidebar) return;
+        if (error) {
+            errorEl.textContent = error.message;
+            errorEl.style.display = "block";
+        } else {
+            errorEl.textContent = "Check your email for the confirmation link!";
+            errorEl.style.color = "green";
+            errorEl.style.display = "block";
+        }
+    },
 
-    sidebar.classList.toggle('hidden');
-  },
+    showProfileSetup() {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('profile-setup-section').style.display = 'block';
+    },
 
-  // Continue as guest
-  continueAsGuest() {
-    // Skip profile creation, go to age gate
-    showScreen('age-gate');
-  },
+   async loadProfile() {
+       if (!this.user) return null;
 
-  // Edit profile
-  editProfile() {
-    if (!FEATURES.PHASE2_PROFILES) return;
+       const { data, error } = await this.supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', this.user.id)
+        .single();
 
-    // Load existing profile data into form
-    const profile = this.loadProfile();
-    if (profile) {
-      if (document.getElementById('profile-name')) {
-        document.getElementById('profile-name').value = profile.name || '';
-      }
-      if (document.getElementById('profile-age')) {
-        document.getElementById('profile-age').value = profile.age || '';
-      }
-      if (document.getElementById('profile-orientation')) {
-        document.getElementById('profile-orientation').value = profile.orientation || '';
-      }
+       if (data) {
+           gameState.profile = {
+               name: data.display_name,
+               photo: data.avatar_url, // URL or base64
+               age: data.age_range,
+               orientation: data.orientation,
+               aboutMe: data.about_me || [],
+               links: data.social_links || {}
+           };
+           // If we have a profile, we can probably proceed to lobby?
+           // Or just pre-fill the form
+           return gameState.profile;
+       }
+       return null;
+    },
 
-      // Set photo preview
-      if (profile.photo) {
+    async saveProfile() {
+        if (!this.user) return;
+
+        const profileData = {
+            id: this.user.id,
+            display_name: document.getElementById('profile-name')?.value.trim() || 'Anonymous',
+            // For photo, we should technically upload to storage, but for now we might still keep base64
+            // if the user used the file input, stored in gameState.profile.photo temp
+            avatar_url: gameState.profile?.photo || null,
+            age_range: document.getElementById('profile-age')?.value || '',
+            orientation: document.getElementById('profile-orientation')?.value || '',
+            about_me: this.getSelectedTags(),
+            social_links: {
+                x: document.getElementById('profile-link-x')?.value.trim() || '',
+                bluesky: document.getElementById('profile-link-bluesky')?.value.trim() || '',
+                bateworld: document.getElementById('profile-link-bateworld')?.value.trim() || '',
+                discord: document.getElementById('profile-link-discord')?.value.trim() || '',
+                telegram: document.getElementById('profile-link-telegram')?.value.trim() || '',
+                fetlife: document.getElementById('profile-link-fetlife')?.value.trim() || '',
+                reddit: document.getElementById('profile-link-reddit')?.value.trim() || '',
+            },
+            updated_at: new Date()
+        };
+
+        const { error } = await this.supabase
+            .from('profiles')
+            .upsert(profileData);
+
+        if (error) {
+            console.error("Error saving profile:", error);
+            alert("Error saving profile: " + error.message);
+        } else {
+            gameState.profile = {
+                name: profileData.display_name,
+                photo: profileData.avatar_url,
+                age: profileData.age_range,
+                orientation: profileData.orientation,
+                aboutMe: profileData.about_me,
+                links: profileData.social_links
+            };
+
+            // Proceed to lobby
+            if (window.showScreen) window.showScreen('lobby-screen');
+        }
+    },
+
+    getSelectedTags() {
+        const checkboxes = document.querySelectorAll('#about-me-tags input[type="checkbox"]:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    },
+
+    async handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Preview locally first for immediate feedback
         const preview = document.getElementById('profile-photo-preview');
-        if (preview) {
-          preview.src = profile.photo;
-          preview.style.display = 'block';
+        const placeholder = document.getElementById('photo-placeholder');
+
+        // Show local preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to Supabase Storage
+        if (!this.user) return; // Should be logged in
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${this.user.id}-${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        try {
+            const { data, error } = await this.supabase.storage
+                .from('avatars')
+                .upload(filePath, file, { upsert: true });
+
+            if (error) throw error;
+
+            // Get Public URL
+            const { data: { publicUrl } } = this.supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath);
+
+            console.log("Uploaded photo:", publicUrl);
+
+            if (!gameState.profile) gameState.profile = {};
+            gameState.profile.photo = publicUrl;
+
+            // Also update the preview to ensure it loads from remote source eventually?
+            // Better stick to local reader for speed, but store URL for saveProfile.
+
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+            alert('Error uploading photo: ' + error.message);
         }
-      }
+    },
 
-      // Set tags
-      if (profile.aboutMe) {
-        document.querySelectorAll('#about-me-tags input[type="checkbox"]').forEach(cb => {
-          cb.checked = profile.aboutMe.includes(cb.value);
-        });
-      }
+    // UI Helpers for Profile Modal (View other users)
+    showProfile(userId, profile) {
+         if (!APP_CONFIG.FEATURES.PHASE2_PROFILES) return;
+         const modal = document.getElementById('profile-view-modal');
+         const content = document.getElementById('profile-view-content');
 
-      // Set links
-      if (profile.links) {
-        Object.keys(profile.links).forEach(key => {
-          const input = document.getElementById(`profile-link-${key}`);
-          if (input) {
-            input.value = profile.links[key] || '';
-          }
-        });
-      }
-    }
+         if (!modal || !content) return;
+         modal.dataset.viewedUserId = userId; // Just for context, though friends/block might be different now
 
-    if (window.showScreen) {
-      window.showScreen('profile-screen');
-    }
-  },
+         content.innerHTML = `
+           <div class="profile-view">
+             ${profile.photo ? `<img src="${profile.photo}" alt="${profile.name}" class="profile-view-photo" />` : '<div class="profile-view-photo-placeholder">No Photo</div>'}
+             <h2>${profile.name || 'Anonymous'}</h2>
+             ${profile.age ? `<p><strong>Age:</strong> ${profile.age}</p>` : ''}
+             ${profile.orientation ? `<p><strong>Orientation:</strong> ${profile.orientation}</p>` : ''}
+             ${profile.aboutMe && profile.aboutMe.length > 0 ? `
+               <div class="profile-tags">
+                 <strong>About:</strong>
+                 ${profile.aboutMe.map(tag => `<span class="tag">${tag}</span>`).join('')}
+               </div>
+             ` : ''}
+             ${this.buildProfileLinks(profile.links)}
+           </div>
+         `;
+         modal.classList.remove('hidden');
+    },
 
-  // Update online users list
-  updateOnlineUsers(users) {
-    if (!FEATURES.PHASE2_PROFILES) return;
+    buildProfileLinks(links) {
+        if (!links || Object.keys(links).length === 0) return '';
+        const linkLabels = { x: 'X', bluesky: 'Bluesky', bateworld: 'Bateworld', discord: 'Discord', telegram: 'Telegram', fetlife: 'Fetlife', reddit: 'Reddit' };
+        const linkItems = Object.entries(links).filter(([k,v]) => v && v.trim()).map(([k,v]) => {
+            // ... (Same URL building logic)
+             let url = v;
+            if (k === 'discord' && !v.startsWith('http')) url = `https://discord.com/users/${v}`;
+            else if (k === 'telegram' && !v.startsWith('http')) url = `https://t.me/${v.replace('@', '')}`;
+            return `<a href="${url}" target="_blank">${linkLabels[k]}</a>`;
+        }).join(' | ');
+        return linkItems ? `<div class="profile-links"><strong>Links:</strong> ${linkItems}</div>` : '';
+    },
 
-    const list = document.getElementById('online-users-list');
-    if (!list) return;
+    closeProfileModal() {
+        document.getElementById('profile-view-modal')?.classList.add('hidden');
+    },
 
-    // Filter out blocked users
-    const visibleUsers = users.filter(user =>
-      !gameState.blockedUsers.includes(user.userId) &&
-      user.userId !== gameState.userId
-    );
-
-    if (visibleUsers.length === 0) {
-      list.innerHTML = '<p class="no-users">No other users online</p>';
-      return;
-    }
-
-    list.innerHTML = visibleUsers.map(user => `
-      <div class="online-user-item" data-user-id="${user.userId}">
-        ${user.profile?.photo ?
-          `<img src="${user.profile.photo}" alt="${user.profile.name}" class="online-user-photo" />` :
-          '<div class="online-user-photo-placeholder">👤</div>'
+    updateOnlineUsers(users) {
+        const list = document.getElementById('online-users-list');
+        if (!list) return;
+        // Basic rendering
+        const visibleUsers = users.filter(u => u.userId !== gameState.userId); // Add block filter later
+        if (visibleUsers.length === 0) {
+            list.innerHTML = '<p class="no-users">No other users online</p>';
+            return;
         }
-        <div class="online-user-info">
-          <div class="online-user-name">${user.profile?.name || 'Anonymous'}</div>
-          <div class="online-user-status">${user.status || 'Online'}</div>
-        </div>
-      </div>
-    `).join('');
+        list.innerHTML = visibleUsers.map(user => `
+            <div class="online-user-item" onclick="ProfileSystem.showProfile('${user.userId}', ${JSON.stringify(user.profile).replace(/"/g, '&quot;')})">
+                 <div class="online-user-photo-placeholder">👤</div>
+                 <div class="online-user-info">
+                    <div class="online-user-name">${user.profile?.name || 'Anonymous'}</div>
+                    <div class="online-user-status">${user.status || 'Online'}</div>
+                 </div>
+            </div>
+        `).join('');
+    },
 
-    // Add click handlers
-    list.querySelectorAll('.online-user-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const userId = item.dataset.userId;
-        const user = visibleUsers.find(u => u.userId === userId);
-        if (user && user.profile) {
-          this.showProfile(userId, user.profile);
-        }
-      });
-    });
-  },
+    editProfile() {
+        this.showProfileSetup();
+        // Load data into form...
+        // (Simplified for now - assumes data stays in inputs or state)
+        if (window.showScreen) window.showScreen('profile-screen');
+    }
 };
 
-// Initialize profile system when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => ProfileSystem.init());
-} else {
-  ProfileSystem.init();
-}
-
-// Make globally accessible
 window.ProfileSystem = ProfileSystem;
+document.addEventListener('DOMContentLoaded', () => ProfileSystem.init());
