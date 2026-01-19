@@ -1645,7 +1645,9 @@ function startWarmupPhase() {
       startSessionTimer(); // Start the 15m timer
 
       // Kickstart the prompt loop after a short delay to let video load
+      const thisGameId = gameState.gameInstanceId;
       setTimeout(() => {
+          if (gameState.gameInstanceId !== thisGameId) return;
           changeState();
       }, 2000);
 
@@ -1662,11 +1664,14 @@ function startWarmupPhase() {
       gameState.isStroking = false;
 
       startSessionTimer();
+      const thisGameId = gameState.gameInstanceId;
 
       setTimeout(() => {
+          if (gameState.gameInstanceId !== thisGameId) return;
           changeState();
       }, 2000);
       setTimeout(() => {
+           if (gameState.gameInstanceId !== thisGameId) return;
           changeState();
       }, 2000);
       return; // EXIT here so we don't hit the "Warmup" logic which overrides everything!
@@ -2057,6 +2062,9 @@ function handleEdgeReached() {
   const roll = Math.random() * 100;
   const allowOrgasm = roll < settings.orgasmChance;
 
+  // Capture current game instance to prevent zombie timeouts
+  const thisGameId = gameState.gameInstanceId;
+
   if (allowOrgasm) {
     // PROTECT SESSION LENGTH: If not near the end (95%), deny instead
     // Unless in "Sudden Death" or specific high-risk modes (which we don't have yet)
@@ -2069,6 +2077,9 @@ function handleEdgeReached() {
         elements.gameScreen.className = "screen active denied-state";
 
         setTimeout(() => {
+          // Check if game reset happened
+          if (gameState.gameInstanceId !== thisGameId) return;
+
           gameState.phase = "playing";
           gameState.edgeLevel = 20;
 
@@ -2092,6 +2103,7 @@ function handleEdgeReached() {
 
     // Give 10 seconds to cum (matching the instruction "You have 10 seconds to cum")
     setTimeout(() => {
+      if (gameState.gameInstanceId !== thisGameId) return;
       const postCumMessage = instructions.postCum
         ? instructions.postCum[Math.floor(Math.random() * instructions.postCum.length)]
         : "Session Complete";
@@ -2108,6 +2120,7 @@ function handleEdgeReached() {
 
     // Reset after showing denial message
     setTimeout(() => {
+      if (gameState.gameInstanceId !== thisGameId) return;
       gameState.phase = "playing";
       gameState.edgeLevel = 20;
 
@@ -2191,6 +2204,9 @@ function updatePlayerRanking(data) {
 }
 
 function resetGame() {
+  // Create a new ID to invalidate any pending timeouts from previous game
+  gameState.gameInstanceId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+
   gameState.isPlaying = false;
   gameState.isPaused = false;
   gameState.edgeLevel = 0;
@@ -2199,12 +2215,18 @@ function resetGame() {
   clearTimeout(gameState.timer);
   clearInterval(gameState.sessionTimer);
 
+  // Cancel any Hypno animation
+  const hypnoCanvas = document.getElementById("hypno-spiral");
+  if (hypnoCanvas && hypnoCanvas.animationId) {
+      cancelAnimationFrame(hypnoCanvas.animationId);
+  }
+
   elements.edgeBar.style.width = "0%";
   elements.edgeBar.style.transition = "none"; // Reset transition
   elements.edgePercentage.textContent = "0";
   elements.instruction.textContent = "Get Ready...";
   // Timer hidden
-  elements.timerDisplay.textContent = "";
+  if (elements.timerDisplay) elements.timerDisplay.textContent = "";
   elements.gameScreen.className = "screen active";
   elements.pauseBtn.textContent = "Pause";
 }
