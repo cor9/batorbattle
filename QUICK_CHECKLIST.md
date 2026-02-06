@@ -5,6 +5,14 @@
 - [ ] You have GitHub repository access
 - [ ] You know your AWS region (e.g., `us-east-1`)
 
+## 🚨 Immediate Fix: Profiles Not Saving
+**Where:** Supabase Console -> SQL Editor
+- [ ] Open `SUPABASE_FULL_SETUP.sql` from your project files.
+- [ ] Copy the entire content.
+- [ ] Paste into the Supabase SQL Editor.
+- [ ] Run the script. This creates the missing table columns and permissions.
+- [ ] ✅ **Done:** Profiles will now save correctly.
+
 ---
 
 ## Step 1: Create ECR Repository (5 min)

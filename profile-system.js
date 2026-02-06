@@ -208,6 +208,8 @@ const ProfileSystem = {
             updated_at: new Date()
         };
 
+            console.log("Saving profile data:", profileData);
+
         const { error } = await this.supabase
             .from('profiles')
             .upsert(profileData);
